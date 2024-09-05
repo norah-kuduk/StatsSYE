@@ -113,9 +113,9 @@ ggplot(df_tiafoe, aes(x = ace)) +
 ```
 
 
-Step 2: Set up our shiny app inputs. Before, we just had a single input. Now, we will have two: one for player and one for variable. Let’s focus on one at a time, doing player first. Type shinyapp and click on the R Studio snippet to bring up a base app.
 ```{r}
 library(shiny)
+library(glue)
 
 ui <- fluidPage(
   selectInput("player", "Select a player", choices = unique(df$player)),
@@ -126,10 +126,11 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
+  df_player <- reactive(df |> filter(player == input$player))
   output$histogram <- renderPlot({
-    df_player <- df |> filter(player == input$player)
+    df_player_data <- df_player()
     
-    ggplot(df_player, aes(x = .data[[input$variable]])) +
+    ggplot(df_player_data, aes(x = .data[[input$variable]])) +
       geom_histogram(bins = input$bins, fill = "lightblue", colour = "grey21") +
       labs(
         x = input$variable,
@@ -142,16 +143,176 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 ```
 
-Step 5: Now we repeat some of these steps for a second input: a variable that the user selects. We will use radioButtons() as the input in the UI.
-
-We will discuss why we need to take some extra steps to perform the “user can select a variable” operation in class. In particular, we will need to briefly discuss tidy evaluation to use some of the tidyverse functions in shiny.
-
-Step 6: Finally, we will add a third input that will let the user change the number of bins in the histogram.
-
-Step 7: Use the glue() function from the glue package to change the title of the histogram to include the name of the player in the plot.
-
-Exercise 1. If we move the output$name_of_histogram <- .... code to the very beginning of the server function, do you think the app will still run? Give a reason.
+Exercise 1. If we move the output$name_of_histogram <- .... code to the very beginning of the server function, do you think the app will still run? Give a reason
 
 Exercise 2. Draw the reactive graph for the Tennis app. Make sure to include all inputs, outputs, and reactive expressions in your graph.
 
 Exercise 3. Sketch the reactive graph for the majors app in the previous section. Make sure to include all inputs, outputs, and reactive expressions in your graph.
+
+### 15.3
+
+Exercise 1. In the tennis app, change the histogram input from a sliderInput() to a numericInput().
+
+```{r}
+library(shiny)
+library(glue)
+
+ui <- fluidPage(
+  selectInput("player", "Select a player", choices = unique(df$player)),
+  radioButtons("variable", "Select a variable", choices = c("ace", "df", "svperc", "firstwon", "secondwon")),
+  numericInput("bins", "Select # of bins", value = 15, min = 0, max = 30),
+  plotOutput("histogram")
+)
+
+
+server <- function(input, output, session) {
+  df_player <- reactive(df |> filter(player == input$player))
+  output$histogram <- renderPlot({
+    df_player_data <- df_player()
+    
+    ggplot(df_player_data, aes(x = .data[[input$variable]])) +
+      geom_histogram(bins = input$bins, fill = "lightblue", colour = "grey21") +
+      labs(
+        x = input$variable,
+        y = "Count",
+        title = glue("Histogram of {input$variable} for {input$player}")
+      )
+  })
+}
+
+shinyApp(ui, server)
+```
+
+Exercise 2. In the tennis app, change the histogram input back to sliderinput(). Then, apply 2.2.8 Exercise 3 in the Mastering Shiny book to the tennis app slider.
+
+Exercise 3. Add an additional input or output (or both!) to the Tennis App. You can decide what you want to add here!
+
+```{r}
+library(shiny)
+library(glue)
+library(knitr)
+
+ui <- fluidPage(
+  selectInput("player", "Select a player", choices = unique(df$player)),
+  radioButtons("variable", "Select a variable", choices = c("ace", "df", "svperc", "firstwon", "secondwon")),
+  sliderInput("bins", "Select # of bins", 
+              value = 0, min = 0, max = 100, step = 5, animate = TRUE),
+  plotOutput("histogram"),
+  verbatimTextOutput("summary")
+)
+
+
+server <- function(input, output, session) {
+  df_player <- reactive(df |> filter(player == input$player))
+  output$histogram <- renderPlot({
+    df_player_data <- df_player()
+    
+    ggplot(df_player_data, aes(x = .data[[input$variable]])) +
+      geom_histogram(bins = input$bins, fill = "lightblue", colour = "grey21") +
+      labs(
+        x = input$variable,
+        y = "Count",
+        title = glue("Histogram of {input$variable} for {input$player}")
+      )
+  })
+  
+  output$summary <- renderPrint({
+    df_player_data <- df_player()
+    summary_stats <- df_player_data |>
+      summarise(
+        Mean = mean(.data[[input$variable]], na.rm = TRUE),
+        SD = sd(.data[[input$variable]], na.rm = TRUE)
+      )
+    cat("Summary Statistics:\n")
+    print(summary_stats)
+  })
+}
+
+shinyApp(ui, server)
+```
+
+### 15.4
+
+```{r}
+poke_df <- read_csv(here::here("data/pokemon_full.csv"))
+poke_long <- poke_df |> pivot_longer(4:9, values_to = "value", 
+                                      names_to = "stat")
+
+poke_small <- poke_long |>
+  filter(Name == "Bulbasaur" | Name == "Ivysaur")
+ggplot(data = poke_small, aes(x = stat, y = value)) +
+  geom_col(aes(fill = Name), position = "dodge") +
+  scale_fill_viridis_d()
+```
+
+```{r}
+
+library(shiny)
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectizeInput("pokechoose1", label = "Choose Pokemon",
+                     choices = poke_df$Name, selected = "Bulbasaur")
+    ),
+    mainPanel(
+      plotOutput(outputId = "pokegraph")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  output$pokegraph <- renderPlot({
+    poke_react <- poke_long |> filter(Name %in% input$pokechoose1)
+    
+    ggplot(data = poke_react, aes(x = stat, y = value)) +
+      geom_point() +
+      geom_segment(aes(xend = stat, y = 0, yend = value)) +
+      coord_flip() +
+      labs(title = glue::glue("Graph of the Stats for", input$pokechoose1))
+  })
+  
+}
+
+shinyApp(ui, server)
+```
+
+```{r}
+library(shiny)
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectizeInput("pokechoose1", label = "Choose Pokemon",
+                     choices = poke_df$Name, selected = "Bulbasaur",
+                     multiple = TRUE)
+      ),
+    mainPanel(
+      plotOutput(outputId = "pokegraph")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  poke_react <- reactive({
+    poke_long |> filter(Name %in% input$pokechoose1) 
+  })
+  
+  output$pokegraph <- renderPlot({
+    
+    ggplot(data = poke_react(),
+           aes(x = value, y = stat)) +
+      geom_col(aes(fill = Name),
+               position = position_dodge2(reverse = TRUE)) +
+      scale_fill_viridis_d() +
+      theme_minimal(base_size = 34)
+    
+  })
+  
+}
+
+shinyApp(ui, server)
+```
+
