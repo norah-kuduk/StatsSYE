@@ -4,3 +4,12 @@
 
 1. Go through Chapter 15: Shiny Reactivity at <https://highamm.github.io/dataviz334/13-shiny-reactivity.html>
 
+## For September 12
+
+1. Read in the f1 data to either R or Python.
+
+2. Explore the data to see what is available.
+
+3. Come to next week with some possible analysis question ideas.
+
+4. Check the data challenge data for baseball.
