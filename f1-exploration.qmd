@@ -1,0 +1,57 @@
+```{r}
+# package loading
+library(f1dataR)
+library(tidyverse)
+```
+
+```{r}
+change_cache("~/f1dataRcache", create_dir = TRUE)
+```
+
+
+Overarching visualization ideas
+  - animation of on track movement using telemetry data
+  - have the ability to get car distance around the track in fractions of a second\
+  
+
+Possible exploration
+  - historically, look at a race where one driver had an upgrade and the other did not, track movement, speed, gear, etc
+  - compare telemetry data between different drivers or teams during the same race to find differences in driving style or strategy
+  - plot speed vs. position on the track to visualize acceleration and braking points
+  - find tracks that have changed over time and compare braking zones, average speed, etc
+  - use telemetry data to visualize famous or controversial overtakes and crashes
+  - map telemetry data to specific sections of the track to analyze how different sections affect overall performance
+  - identify critical corners or straights where performance is either optimized or compromised
+  - looking at the DHL fastest lap award over years
+  - (side project) points simulator to see all possible ways a driver could win a championship based on races remaining and fastest lap awards
+  
+  
+Questions to answer
+  - On certain tracks, are there certain sectors that are more important to qualifying result?
+  - Did a upgrade package between drivers affect how the race was driven over more than just lap time?
+  - How does weather affect average speed and position on track?
+  - How do track changes affect overall speed and racing opportunity, were the goals met?
+    - Barcelona 2022-2023 - removed chicane at 14-15
+  - How does track resurfacing affect lap time over the course of a session, or over seasons?
+    - Evolution of FP1, FP2, FP3, Quali in Monza
+  - Lando Norris lost to Max Verstappen by 0.725 seconds in Imola, where could he have made that time up?
+  
+
+Data exploration:
+
+```{r}
+# looking at telemetry data
+load_driver_telemetry(season = 2024, round = 6, driver = "NOR", session = "Q")
+```
+
+```{r}
+plot_fastest(season = 2024, round = 7, session = "R", driver = "NOR", color = "gear")
+```
+
+```{r}
+plot_fastest(season = 2024, round = 7, session = "R", driver = "VER", color = "gear")
+```
+
+Looking at the plot_fastest function to see where it could be adjusted for future track plotting
+
+

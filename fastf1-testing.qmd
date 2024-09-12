@@ -9,7 +9,6 @@ setup_fastf1()
 load_laps(season = 2021, round = 15)
 ```
 
-
 ```{r}
 load_driver_telemetry(season = 2022, round = 4, driver = "PER")
 ```
@@ -19,72 +18,56 @@ plot_fastest(season = 2023, round = 1, session = "R", driver = "VER", color = "g
 ```
 
 ```{r}
-driver_style <- rbind(
-  get_session_drivers_and_teams(2023, round = 1),
-  get_session_drivers_and_teams(2023, round = 13)
-) %>%
-  unique()
-
-driver_style$linestyle <- driver_style$marker <- driver_style$color <- driver_style$abbreviation <- NA
-
-for (i in seq_along(driver_style$name)) {
-  if (driver_style$name[i] == "Liam Lawson") {
-    # Manually handling Kubica
-    style <- get_driver_style(driver_style$name[i], season = 2023, round = 13)
-    driver_style$color[i] <- style$color
-    driver_style$marker[i] <- 2
-    driver_style$linestyle[i] <- "dotted"
-    driver_style$abbreviation[i] <- style$abbreviation
-  } else {
-    style <- get_driver_style(driver_style$name[i], season = 2023, round = 1)
-    driver_style$color[i] <- style$color
-    driver_style$marker[i] <- style$marker
-    driver_style$linestyle[i] <- style$linestyle
-    driver_style$abbreviation[i] <- style$abbreviation
-  }
-}
-
-color_values <- driver_style$color
-names(color_values) <- driver_style$abbreviation
-
-marker_values <- driver_style$marker
-names(marker_values) <- driver_style$abbreviation
-
-linestyle_values <- driver_style$linestyle
-names(linestyle_values) <- driver_style$abbreviation
-```
-
-```{r}
 racename <- load_schedule(2023) %>%
   filter(round == 7) %>%
   pull("race_name")
 
 racename <- paste(racename, "2023")
-
 ```
 
-
 ```{r}
-# Load the laps data (cached!) and filter
+# Load the laps data and filter
 laps <- load_laps(season = 2023, round = 7) |>
   filter(time_sec < 100) |>
   group_by(driver_id) |>
   mutate(driver_avg = mean(time_sec)) |>
   ungroup() |>
   left_join(load_drivers(2023)[, c("driver_id", "code")], by = "driver_id") |>
-  mutate(code = factor(code, unique(code[order(driver_avg)])))
-
+  mutate(code = fct_reorder(code, driver_avg, .desc = FALSE))
+                       
 # table of top 10 median lap times
 laps |> group_by(driver_id) |> summarise(median = median(time_sec)) |> arrange(median) |> head(10)
 
 ggplot(laps, aes(x = code, y = time_sec, color = code, fill = code)) +
   geom_violin(trim = FALSE) +
-  scale_color_manual("Driver", values = color_values, aesthetics = c("color", "fill")) +
   geom_boxplot(width = 0.1, color = "black", fill = "white", outlier.shape = NA) +
-  theme_dark_f1(axis_marks = TRUE) +
-  ggtitle("Driver Lap Times", subtitle = paste("Racing Laps Only -", racename)) +
-  xlab("Driver ID") +
-  ylab("Lap Time (s)") +
+  theme_minimal() + 
+  labs(title = "Driver Lap Times during the 2023 Monaco GP", 
+       x = "Driver ID",
+       y = "Lap Time (s)") +
+  theme(axis.text.x = element_text(angle = 90), legend.position = "")
+```
+
+```{r}
+# Load the laps data and filter
+laps <- load_laps(season = 2023, round = 15) |>
+  filter(time_sec < 115) |>
+  group_by(driver_id) |>
+  mutate(driver_avg = mean(time_sec)) |>
+  ungroup() |>
+  left_join(load_drivers(2023)[, c("driver_id", "code")], by = "driver_id") |>
+  mutate(code = fct_reorder(code, driver_avg, .desc = FALSE))
+                       
+# table of top 10 median lap times
+laps |> group_by(driver_id) |> summarise(median = median(time_sec)) |> arrange(median) |> head(10)
+
+ggplot(laps, aes(x = code, y = time_sec, color = code, fill = code)) +
+  geom_violin(trim = FALSE) +
+  geom_boxplot(width = 0.1, color = "black", fill = "white", outlier.shape = NA) +
+  theme_minimal() + 
+  labs(title = "Driver Lap Times during the 2023 Italian GP", 
+       x = "Driver ID",
+       y = "Lap Time (s)") +
   theme(axis.text.x = element_text(angle = 90), legend.position = "")
 ```
 
