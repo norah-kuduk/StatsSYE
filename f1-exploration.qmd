@@ -11,7 +11,7 @@ change_cache("~/f1dataRcache", create_dir = TRUE)
 
 Overarching visualization ideas
   - animation of on track movement using telemetry data
-  - have the ability to get car distance around the track in fractions of a second\
+  - have the ability to get car distance around the track in fractions of a second
   
 
 Possible exploration
