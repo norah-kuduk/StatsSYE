@@ -1,5 +1,9 @@
 ## Task List
 
+## For September 26
+
+1. Get a dot to move around a track for one lap.
+
 ## For September 19
 
 1. Introduce yourself to gganimate: <https://www.appsilon.com/post/r-gganimate>, <https://gganimate.com/articles/gganimate.html>.
