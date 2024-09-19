@@ -1,0 +1,189 @@
+```{r}
+## install.packages("gganimate")
+## install.packages("gapminder")
+## install.packages("gifski")
+
+library(tidyverse)
+library(gganimate)
+library(gapminder)
+library(gifski)
+```
+
+### Basic Bar Chart
+
+```{r}
+avg_life_exp_cont_year <- gapminder |>
+  group_by(continent, year) |>
+  summarise(avg_life_exp = mean(lifeExp))
+
+p <- ggplot(avg_life_exp_cont_year, aes(x = continent, y = avg_life_exp)) +
+            geom_col() +
+            transition_time(year)
+
+animate(p,
+        width = 1024,
+        height = 768
+        nframes = 600,
+        fps = 60,
+        duration = 10,
+        renderer = gifski_renderer())
+```
+
+### Better Bar Chart
+
+```{r}
+avg_life_exp_cont_year <- gapminder |>
+  group_by(continent, year) |>
+  summarise(
+    avgLifeExp = round(mean(lifeExp), 1)
+  ) |>
+  mutate(
+    avgLifeExpText = as.character(avgLifeExp)
+  )
+
+p <- ggplot(avg_life_exp_cont_year, aes(x = continent, y = avgLifeExp)) +
+  geom_col(fill = "lightblue") +
+  geom_text(aes(label = avgLifeExpText), vjust = -0.5, size = 3) +
+  labs(
+    title = "Average life expectancy by continent for the year {frame_time}",
+    x = "Continent",
+    y = "Average life expectancy"
+  ) +
+  theme_minimal(base_size = 7) +
+  transition_time(year)
+
+animate(
+  p,
+  width = 1024,
+  height = 768,
+  nframes = 600,
+  fps = 60,
+  renderer = gifski_renderer(file = "avg_life_exp_cont_year.gif")
+)
+```
+
+### Lineplot Example
+```{r}
+avg_gdppercap_cont_year <- gapminder |>
+  group_by(continent, year) |>
+  summarise(
+    avgGdpPercap = round(mean(gdpPercap))
+  )
+
+p <- ggplot(avg_gdppercap_cont_year, aes(x = year, y = avgGdpPercap)) +
+  geom_line(color = "lightblue", linewidth = 1) +
+  geom_point(color = "lightblue", size = 3) +
+  labs(
+    title = "Average GDP Per Capita for {closest_state}",
+    x = "Year",
+    y = "Average GDP Per Capita"
+  ) +
+  theme_minimal(base_size = 7) +
+  transition_states(states = continent, transition_length = 2, state_length = 1)
+
+animate(
+  p,
+  width = 1024,
+  height = 768,
+  res = 300,
+  renderer = gifski_renderer(file = "avg_gdppercap_cont_year.gif")
+)
+```
+
+### Treemap Example
+
+```{r}
+## install.packages("treemapify")
+library(treemapify)
+
+eu_population_by_country <- gapminder %>%
+  filter(continent == "Europe") %>%
+  mutate(pop = pop / 1000000) %>%
+  select(-c(lifeExp, gdpPercap))
+
+p <- ggplot(eu_population_by_country, aes(area = pop, fill = pop, label = paste(country, round(pop, 2), sep = "\n"))) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white", place = "centre", size = 8) +
+  theme(legend.position = "none") +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Europe population by country in {closest_state}"
+  ) +
+  transition_states(states = year, transition_length = 2, state_length = 1)
+
+animate(
+  p,
+  width = 1920,
+  height = 1080,
+  res = 300,
+  renderer = gifski_renderer(file = "eu_population_by_country.gif")
+)
+```
+
+### More Animation Techniques
+
+```{r}
+library(gganimate)
+
+p <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length)) + 
+  geom_point()
+
+plot(p)
+```
+
+```{r}
+anim <- p + 
+  transition_states(Species,
+                    transition_length = 2,
+                    state_length = 1)
+
+animate(anim, renderer = gifski_renderer())
+```
+
+```{r}
+anim <- p + 
+  transition_states(Species,
+                    transition_length = 2,
+                    state_length = 1) +
+  ease_aes('cubic-in-out') + # Slow start and end for a smoother look
+  ggtitle('Now showing {closest_state}',
+          subtitle = 'Frame {frame} of {nframes}')
+
+animate(anim, renderer = gifski_renderer()) 
+```
+
+```{r}
+anim <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length)) + 
+  geom_point(aes(colour = Species, group = 1L)) + 
+  transition_states(Species,
+                    transition_length = 2,
+                    state_length = 1) +
+  enter_fade() + enter_drift(x_mod = -1) + 
+  exit_shrink() + exit_drift(x_mod = 5)
+
+animate(anim, renderer = gifski_renderer()) 
+```
+
+### Looking at plotting x,y
+```{r}
+# example of x,y,time to plot movement of a sin graph
+x <- seq(0, 10, by = 0.1)
+y <- sin(x)
+time <- seq(0, 10, by = 0.1)
+
+df <- tibble(x = x, y = y, time = time)
+
+
+animation <- ggplot(df, aes(x = x, y = y)) + 
+  geom_point() + 
+  theme_minimal() + 
+  transition_time(time) 
+
+animate(animation, fps = 10,  renderer = gifski_renderer())
+```
+
+### Animating F1 Stats
+  - animated tree map of constructors points over all time/a season
+  - multiline map of points
+  - cool stat i saw this weekend - ferrari is the first constructor to lead laps in 500 grand prix
+  - using the f1dataR package to have a car drive around a track
