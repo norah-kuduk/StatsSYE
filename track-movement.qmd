@@ -1,0 +1,234 @@
+```{r}
+library(f1dataR)
+library(tidyverse)
+library(dplyr)
+library(gganimate)
+library(gifski)
+## setup_fastf1()
+```
+
+```{r}
+## use_virtualenv("f1dataR_env")
+```
+
+```{r}
+## change the cache to a directory in the r project
+library(here)
+clear_cache()
+```
+
+Hamilton 2018 Singapore Grand Prix Qualifying 
+```{r}
+load_session_laps(season = 2018, round = 15)
+```
+
+```{r}
+load_circuit_details(season = 2018, round = 15)
+```
+
+```{r}
+ham_2018_singapore_quali <- load_driver_telemetry(season = 2018, round = 15, session = "Q", driver = "HAM", laps = "fastest")
+```
+
+```{r}
+plot_fastest(season = 2018, round = 15, session = "Q", driver = "HAM", color = "gear")
+```
+
+```{r}
+racename <- load_schedule(2018) |> 
+  filter(round == 15)
+```
+
+```{r}
+x <- ham_2018_singapore_quali$x
+y <- ham_2018_singapore_quali$y
+time <- ham_2018_singapore_quali$time
+
+df <- tibble(x = x, y = y, time = time)
+
+
+animation <- ggplot(df, aes(x = x, y = y)) + 
+  geom_point() + 
+  theme_minimal() + 
+  transition_time(time) 
+
+animate(animation, fps = 10,  renderer = gifski_renderer())
+```
+
+```{r}
+## plot an empty track
+circuit <- load_circuit_details(season = 2018, round = 15)
+```
+
+```{r}
+## example of plotting a moving point on a static line
+ggplot(data = tibble::tibble(x=1:10,y=1:10), aes(x=x,y=y)) +
+  geom_point() +
+  geom_line(data = tibble::tibble(x2 = 1:10, y = 1:10),
+            aes(x = x2, y = y, group = 1)) +
+  transition_time(x)
+animate(last_plot(), nframes = 50)
+```
+
+```{r}
+ggplot(ham_2018_singapore_quali, aes(x, y)) +
+  geom_path(aes(x, y), linewidth = 4, lineend = "round")
+```
+
+```{r}
+## animate a point over a static path
+## remove gridlines and add title
+
+anim <- ggplot(ham_2018_singapore_quali, aes(x, y, group = NA)) +
+  geom_path(data = tibble::tibble(x = x, y = y), aes(x, y, group = 1), linewidth = 4, lineend = "round", colour = "grey") + 
+  geom_point(aes(x, y), colour = "darkorange") + 
+  theme_minimal() + 
+  transition_time(time)
+
+animate(anim)
+
+```
+
+```{r}
+## animate a point to change color by gear at the time
+anim <- ggplot(ham_2018_singapore_quali |> mutate(n_gear = as_factor(n_gear)), aes(x, y, group = NA, color = n_gear)) +
+  geom_point(aes(x, y), size = 5) + 
+  theme_minimal() + 
+  transition_time(time)
+
+animate(anim)
+```
+
+```{r}
+anim <- ggplot(ham_2018_singapore_quali, aes(x, y, group = NA, color = speed)) +
+  geom_point(aes(x, y), size = 5) + 
+  theme_minimal() + 
+  transition_time(time)
+
+animate(anim)
+```
+
+## Example Code for Reference
+
+from <https://hansenjohnson.org/post/animate-movement-in-r/>
+
+
+```{r}
+# libraries
+library(tidyverse)
+library(rnaturalearth)
+library(gganimate)
+
+# get basemap data
+bg = ne_countries(scale = "medium", continent = 'north america', returnclass = "sf")
+
+# get drifter data
+df = read_csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
+
+# assign convenient column names
+colnames(df) = c('id', 'lon', 'lat', 'time', 've', 'vn')
+```
+
+```{r}
+# compute daily average positions and speeds
+df_ave = df %>%
+  mutate(date=as.Date(time)) %>%
+  group_by(id,date) %>%
+  summarise(
+    lat = mean(lat, na.rm = TRUE), 
+    lon = mean(lon, na.rm = TRUE),
+    spd = mean(sqrt(ve^2+vn^2), na.rm=TRUE)
+  ) 
+
+# create 'ideal' data with all combinations of data
+ideal = expand_grid(
+  id = unique(df_ave$id),
+  date = seq.Date(from = min(df_ave$date), to = max(df_ave$date), by = 1)
+)
+
+# create complete dataset
+df_all = left_join(ideal,df_ave)
+```
+
+```{r}
+p = ggplot()+
+  # basemap
+  geom_sf(data = bg)+
+  coord_sf(xlim = range(df_all$lon, na.rm = TRUE), 
+           ylim = range(df_all$lat, na.rm = TRUE), 
+           expand = FALSE)+
+  
+  # lines and points
+  geom_path(data = df_all, 
+            aes(x=lon,y=lat,group=id,color=spd), 
+            alpha = 0.3)+
+  geom_point(data = df_all, 
+             aes(x=lon,y=lat,group=id,fill=spd),
+             alpha = 0.7, shape=21, size = 2)+
+  
+  # formatting
+  scale_fill_viridis_c(option = "inferno")+
+  scale_color_viridis_c(option = "inferno")+
+  scale_size_continuous(range = c(0.1,10))+
+  labs(x=NULL, y=NULL, 
+       fill = 'Speed (m/s)', 
+       color = 'Speed (m/s)')+
+  theme_dark()+
+  theme(panel.grid = element_blank())
+p
+```
+
+```{r}
+# animate
+anim = p + 
+  transition_reveal(along = date)+
+  ease_aes('linear')+
+  ggtitle("Date: {frame_along}")
+
+animate(anim, nframes = 365, fps = 10)
+```
+
+
+## Attempt for Track
+```{r}
+## get data to draw a track
+singapore_2018_track <- load_circuit_details(season = 2018, round = 15)
+singapore_2018_track <- singapore_2018_track$corners
+
+singapore_2018_track2 <- ham_2018_singapore_quali |> select(-time)
+```
+
+```{r}
+## works but the track is choppy
+p = ggplot() +
+  geom_path(data = singapore_2018_track, aes(x=x,y=y,group=1), linewidth=6, color = "grey") +
+  geom_point(data = ham_2018_singapore_quali, aes(x=x,y=y),
+             alpha = 0.7, color = "black")+
+  labs(x=NULL, y=NULL)+
+  theme_minimal()+
+  theme(panel.grid = element_blank(), axis.text = element_blank(), axis.title = element_blank())
+p
+```
+
+```{r}
+## smooth track but reveals with point
+p2 = ggplot() +
+  geom_path(data = singapore_2018_track2, aes(x=x,y=y,group=1), linewidth=6, color = "grey") +
+  geom_point(data = ham_2018_singapore_quali, aes(x=x,y=y),
+             alpha = 0.7, color = "black")+
+  labs(x=NULL, y=NULL)+
+  theme_minimal()+
+  theme(panel.grid = element_blank(), axis.text = element_blank(), axis.title = element_blank())
+p2
+```
+
+```{r}
+# animate
+anim = p2 + 
+  transition_reveal(along = time)+
+  ease_aes('linear')+
+  ggtitle("Time: {frame_along}")
+
+animate(anim, fps = 10)
+```
+

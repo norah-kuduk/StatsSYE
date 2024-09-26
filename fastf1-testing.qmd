@@ -2,7 +2,19 @@
 library(f1dataR)
 library(tidyverse)
 library(dplyr)
-setup_fastf1()
+## setup_fastf1()
+```
+
+```{r}
+## use_virtualenv("f1dataR_env")
+```
+
+```{r}
+load_circuits()
+```
+
+```{r}
+load_circuit_details(season = get_current_season(), round = 17)
 ```
 
 ```{r}

@@ -116,7 +116,7 @@ animate(
   width = 1920,
   height = 1080,
   res = 300,
-  renderer = gifski_renderer(file = "eu_population_by_country.gif")
+  renderer = gifski_renderer()
 )
 ```
 
