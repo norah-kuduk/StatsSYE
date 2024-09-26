@@ -112,82 +112,7 @@ animate(anim)
 
 from <https://hansenjohnson.org/post/animate-movement-in-r/>
 
-
-```{r}
-# libraries
-library(tidyverse)
-library(rnaturalearth)
-library(gganimate)
-
-# get basemap data
-bg = ne_countries(scale = "medium", continent = 'north america', returnclass = "sf")
-
-# get drifter data
-df = read_csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
-
-# assign convenient column names
-colnames(df) = c('id', 'lon', 'lat', 'time', 've', 'vn')
-```
-
-```{r}
-# compute daily average positions and speeds
-df_ave = df %>%
-  mutate(date=as.Date(time)) %>%
-  group_by(id,date) %>%
-  summarise(
-    lat = mean(lat, na.rm = TRUE), 
-    lon = mean(lon, na.rm = TRUE),
-    spd = mean(sqrt(ve^2+vn^2), na.rm=TRUE)
-  ) 
-
-# create 'ideal' data with all combinations of data
-ideal = expand_grid(
-  id = unique(df_ave$id),
-  date = seq.Date(from = min(df_ave$date), to = max(df_ave$date), by = 1)
-)
-
-# create complete dataset
-df_all = left_join(ideal,df_ave)
-```
-
-```{r}
-p = ggplot()+
-  # basemap
-  geom_sf(data = bg)+
-  coord_sf(xlim = range(df_all$lon, na.rm = TRUE), 
-           ylim = range(df_all$lat, na.rm = TRUE), 
-           expand = FALSE)+
-  
-  # lines and points
-  geom_path(data = df_all, 
-            aes(x=lon,y=lat,group=id,color=spd), 
-            alpha = 0.3)+
-  geom_point(data = df_all, 
-             aes(x=lon,y=lat,group=id,fill=spd),
-             alpha = 0.7, shape=21, size = 2)+
-  
-  # formatting
-  scale_fill_viridis_c(option = "inferno")+
-  scale_color_viridis_c(option = "inferno")+
-  scale_size_continuous(range = c(0.1,10))+
-  labs(x=NULL, y=NULL, 
-       fill = 'Speed (m/s)', 
-       color = 'Speed (m/s)')+
-  theme_dark()+
-  theme(panel.grid = element_blank())
-p
-```
-
-```{r}
-# animate
-anim = p + 
-  transition_reveal(along = date)+
-  ease_aes('linear')+
-  ggtitle("Date: {frame_along}")
-
-animate(anim, nframes = 365, fps = 10)
-```
-
+this code would run and i dint feel like debugging it but i used it for reference
 
 ## Attempt for Track
 ```{r}
@@ -212,14 +137,31 @@ p
 
 ```{r}
 ## smooth track but reveals with point
+singapore_2018_track2 <- ham_2018_singapore_quali |> select(-time)
+singapore_2018_track2 <- singapore_2018_track2 |> mutate(x2 = singapore_2018_track2$x, 
+                                                         y2 = singapore_2018_track2$y) |>
+  select(-x, -y) |> select(x2,y2)
+``` 
+
+```{r}
 p2 = ggplot() +
-  geom_path(data = singapore_2018_track2, aes(x=x,y=y,group=1), linewidth=6, color = "grey") +
-  geom_point(data = ham_2018_singapore_quali, aes(x=x,y=y),
+  geom_path(data = singapore_2018_track2, aes(x=x2, y=y2, group=1), linewidth=6, color = "grey") +
+  geom_point(data = ham_2018_singapore_quali, aes(x=x, y=y, group = NA),
              alpha = 0.7, color = "black")+
   labs(x=NULL, y=NULL)+
   theme_minimal()+
   theme(panel.grid = element_blank(), axis.text = element_blank(), axis.title = element_blank())
 p2
+```
+
+```{r}
+# animate
+anim = p2 + 
+  transition_time(time = time)+
+  ease_aes('linear')+
+  ggtitle("Time: {frame_time}")
+
+animate(anim, fps = 10)
 ```
 
 ```{r}
@@ -231,4 +173,5 @@ anim = p2 +
 
 animate(anim, fps = 10)
 ```
+
 
