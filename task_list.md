@@ -1,5 +1,13 @@
 ## Task List
 
+## For October 3
+
+1. Clean up some things about the plot (getting colour scheme, rounding the time).
+
+2. Colour mapping for each team.
+
+3. Fix the static plot issue.
+
 ## For September 26
 
 1. Get a dot to move around a track for one lap.
