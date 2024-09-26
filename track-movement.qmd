@@ -156,6 +156,7 @@ p2
 
 ```{r}
 # animate
+# transition_time does not draw path, but had movement of point
 anim = p2 + 
   transition_time(time = time)+
   ease_aes('linear')+
@@ -166,6 +167,7 @@ animate(anim, fps = 10)
 
 ```{r}
 # animate
+# transition reveal reveals patha along with point by time
 anim = p2 + 
   transition_reveal(along = time)+
   ease_aes('linear')+
