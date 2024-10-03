@@ -1,0 +1,164 @@
+```{r}
+library(f1dataR)
+library(tidyverse)
+library(dplyr)
+library(gganimate)
+library(gifski)
+```
+
+Hamilton 2018 Singapore Grand Prix Qualifying 
+
+```{r}
+load_session_laps(season = 2018, round = 15)
+```
+
+```{r}
+load_circuit_details(season = 2018, round = 15)
+```
+
+```{r}
+ham_2018_singapore_quali <- load_driver_telemetry(season = 2018, round = 15, session = "Q", driver = "HAM", laps = "fastest")
+```
+
+```{r}
+plot_fastest(season = 2018, round = 15, session = "Q", driver = "HAM", color = "gear")
+```
+
+```{r}
+racename <- load_schedule(2018) |> 
+  filter(round == 15)
+```
+
+```{r}
+## smooth track
+singapore_2018_track2 <- ham_2018_singapore_quali |> select(-time)
+singapore_2018_track2 <- singapore_2018_track2 |> mutate(x2 = singapore_2018_track2$x, 
+                                                         y2 = singapore_2018_track2$y) |>
+  select(-x, -y) |> select(x2,y2)
+
+## add the first row again as the last row
+singapore_2018_track2 <- bind_rows(singapore_2018_track2, singapore_2018_track2 |> slice(1))
+``` 
+
+```{r}
+# get mercedes color
+merc_color <- constructor_color("mercedes")
+ham_color <- driver_color("HAM")
+```
+
+```{r}
+p2 = ggplot() +
+  geom_path(data = singapore_2018_track2, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = ham_2018_singapore_quali, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = ham_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Hamilton Qualifying Lap", 
+  subtitle = "Monaco Grand Prix 2018")
+p2
+```
+
+```{r}
+anim = p2 + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f',frame_along)}")
+
+animate(anim, width = 512, height = 512, fps = 10)
+```
+
+Norris 2024 Singapore
+
+```{r}
+norris_2024_singapore_quali <- load_driver_telemetry(season = 2024, round = 18, session = "Q", driver = "NOR", laps = "fastest")
+```
+
+```{r}
+plot_fastest(season = 2024, round = 18, session = "Q", driver = "NOR", color = "gear")
+```
+
+```{r}
+## smooth track
+singapore_2024_track <- norris_2024_singapore_quali |> select(-time) |> 
+  mutate(x2 = norris_2024_singapore_quali$x, y2 = norris_2024_singapore_quali$y) |>
+  select(-x, -y) |> select(x2,y2)
+
+## add first row back to the end
+singapore_2024_track <- bind_rows(singapore_2024_track, singapore_2024_track |> slice(1))
+```
+
+```{r}
+# get mclaren color
+mcl_color <- constructor_color("mclaren")
+```
+
+```{r}
+p3 = ggplot() +
+  geom_path(data = singapore_2024_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = norris_2024_singapore_quali, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = mcl_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Norris Qualifying Lap", 
+  subtitle = "Singapore Grand Prix 2024")
+p3
+```
+
+```{r}
+anim = p3 + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f',frame_along)}")
+
+animate(anim, width = 512, height = 512, fps = 10)
+```
+
+Leclerc Canada Qualifying
+
+```{r}
+leclerc_2024_canada_quali <- load_driver_telemetry(season = 2024, round = 9, session = "Q", driver = "LEC", laps = "fastest")
+```
+
+```{r}
+## smooth track
+canada_2024_track <- leclerc_2024_canada_quali |> select(-time) |> 
+  mutate(x2 = leclerc_2024_canada_quali$x, y2 = leclerc_2024_canada_quali$y) |>
+  select(-x, -y) |> select(x2,y2)
+
+canada_2024_track <- bind_rows(canada_2024_track, canada_2024_track |> slice(1))
+```
+
+```{r}
+# get ferrari color
+fer_color <- constructor_color("ferrari")
+```
+
+```{r}
+p4 = ggplot() +
+  geom_path(data = canada_2024_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = leclerc_2024_canada_quali, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = fer_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Leclerc Qualifying Lap", 
+  subtitle = "Canada Grand Prix 2024")
+```
+
+```{r}
+anim = p4 + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f',frame_along)}")
+
+animate(anim, width = 512, height = 512, fps = 10)
+
+## look into correct track ratios function to fix how wonky this looks, actual track is much longer/skinnier
+```
+
+
+
+
+
+
+
+

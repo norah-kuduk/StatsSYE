@@ -14,7 +14,7 @@ library(gifski)
 ```{r}
 ## change the cache to a directory in the r project
 library(here)
-clear_cache()
+# clear_cache()
 ```
 
 Hamilton 2018 Singapore Grand Prix Qualifying 
@@ -141,9 +141,13 @@ singapore_2018_track2 <- ham_2018_singapore_quali |> select(-time)
 singapore_2018_track2 <- singapore_2018_track2 |> mutate(x2 = singapore_2018_track2$x, 
                                                          y2 = singapore_2018_track2$y) |>
   select(-x, -y) |> select(x2,y2)
+
+## add the first row again as the last row
+singapore_2018_track2 <- bind_rows(singapore_2018_track2, singapore_2018_track2 |> slice(1))
 ``` 
 
 ```{r}
+
 p2 = ggplot() +
   geom_path(data = singapore_2018_track2, aes(x=x2, y=y2, group=1), linewidth=6, color = "grey") +
   geom_point(data = ham_2018_singapore_quali, aes(x=x, y=y, group = NA),
@@ -176,4 +180,30 @@ anim = p2 +
 animate(anim, fps = 10)
 ```
 
+```{r}
+# get mercedes color
+merc_color <- constructor_color("mercedes")
+ham_color <- driver_color("HAM")
+```
+
+```{r}
+p2 = ggplot() +
+  geom_path(data = singapore_2018_track2, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = ham_2018_singapore_quali, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = ham_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Hamilton Qualifying Lap", 
+  subtitle = "Monaco Grand Prix 2018")
+p2
+```
+
+```{r}
+anim = p2 + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f',frame_along)}")
+
+animate(anim, width = 512, height = 512, fps = 10)
+```
 
