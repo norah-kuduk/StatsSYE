@@ -1,5 +1,16 @@
 ## Task List
 
+## For October 10
+
+1. Get colour mapping working.
+
+2. Use their plotting function to fix the aspect ratio of some of the plots.
+
+3. Add speed as an animation so that it tracks speed as well as time.
+
+4. Add another qualifying driver to compare.
+
+
 ## For October 3
 
 1. Clean up some things about the plot (getting colour scheme, rounding the time).
