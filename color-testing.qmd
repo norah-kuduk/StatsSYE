@@ -44,6 +44,7 @@ singapore_2018_track2 <- bind_rows(singapore_2018_track2, singapore_2018_track2 
 # get mercedes color
 merc_color <- constructor_color("mercedes")
 ham_color <- driver_color("HAM")
+russell_color <- driver_color("RUS")
 ```
 
 ```{r}
@@ -54,7 +55,7 @@ p2 = ggplot() +
   labs(x=NULL, y=NULL) +
   theme_track() +
   labs(title = "Hamilton Qualifying Lap", 
-  subtitle = "Monaco Grand Prix 2018")
+  subtitle = "Singapore Grand Prix 2018")
 p2
 ```
 
@@ -72,6 +73,11 @@ Norris 2024 Singapore
 ```{r}
 norris_2024_singapore_quali <- load_driver_telemetry(season = 2024, round = 18, session = "Q", driver = "NOR", laps = "fastest")
 ```
+
+```{r}
+norris_plot_corrected <- correct_track_ratio(norris_plot)
+```
+
 
 ```{r}
 plot_fastest(season = 2024, round = 18, session = "Q", driver = "NOR", color = "gear")
@@ -93,7 +99,7 @@ mcl_color <- constructor_color("mclaren")
 ```
 
 ```{r}
-p3 = ggplot() +
+p3 <- ggplot() +
   geom_path(data = singapore_2024_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
   geom_point(data = norris_2024_singapore_quali, aes(x=x, y=y, group = NA),
              alpha = 0.7, color = mcl_color, size=3)+
@@ -134,7 +140,7 @@ fer_color <- constructor_color("ferrari")
 ```
 
 ```{r}
-p4 = ggplot() +
+p4 <- ggplot() +
   geom_path(data = canada_2024_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
   geom_point(data = leclerc_2024_canada_quali, aes(x=x, y=y, group = NA),
              alpha = 0.7, color = fer_color, size=3)+
@@ -148,17 +154,167 @@ p4 = ggplot() +
 anim = p4 + 
   transition_reveal(along = time)+
   ease_aes('linear') +
-  labs(caption = "Time: {sprintf('%.3f',frame_along)}")
+  labs(caption = glue("Time: {sprintf('%.3f', frame_along)} s"))
 
 animate(anim, width = 512, height = 512, fps = 10)
 
 ## look into correct track ratios function to fix how wonky this looks, actual track is much longer/skinnier
 ```
 
+Working on Correcting Track Ratio
 
+```{r}
+leclerc_2024_canada_quali
+```
 
+```{r}
+xrange <- range(leclerc_2024_canada_quali$x, na.rm = TRUE) + c(-500, 500)
+yrange <- range(leclerc_2024_canada_quali$y, na.rm = TRUE) + c(-500, 500)
+maxdiff <- max(abs(xrange[2] - xrange[1]), abs(yrange[2] - yrange[1]), na.rm = TRUE)
+  
+xmid <- mean(xrange)
+ymid <- mean(yrange)
+  
+newxlim <- c(xmid - 0.5 * maxdiff, xmid + 0.5 * maxdiff)
+newylim <- c(ymid - 0.5 * maxdiff, ymid + 0.5 * maxdiff)
+```
 
+```{r}
+leclerc_2024_canada_quali_corrected <- p4 +
+  ggplot2::coord_fixed(xlim = newxlim, ylim = newylim)
+```
 
+```{r}
+anim = leclerc_2024_canada_quali_corrected + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s")
 
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+Canada Quali Exploration
+
+```{r}
+color_values <- full_driver_colors_df$color
+names(color_values) <- full_driver_colors_df$driver_abbr
+```
+
+```{r}
+load_schedule(2024) |> 
+  filter(round == 9)
+```
+
+```{r}
+# plot the fastest qualifying laps from each driver during the 2024 canadian gp
+canada_2024_quali_laps <- load_session_laps(season = 2024, round = 9, session = "Q")
+```
+
+```{r}
+canada_2024_fastest_laps <- canada_2024_quali_laps |> group_by(driver) |> 
+  summarise(fastest_lap = min(lap_time, na.rm=TRUE)) |> 
+  mutate(driver = fct_reorder(driver, fastest_lap)) |>
+```
+
+```{r}
+summary(canada_2024_fastest_laps$fastest_lap)
+```
+
+```{r}
+fastest_laps <- ggplot(data = canada_2024_fastest_laps, aes(x = driver, y = fastest_lap, fill = driver)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values = color_values) +
+  labs(title = "Fastest Qualifying Laps", subtitle = "Canada Grand Prix 2024") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+fastest_laps
+```
+
+Plot 2 Dots
+
+```{r}
+russel_2024_canada_quali <- load_driver_telemetry(season = 2024, round = 9, session = "Q", driver = "RUS", laps = "fastest")
+zhou_2024_canada_quali <- load_driver_telemetry(season = 2024, round = 9, session = "Q", driver = "ZHO", laps = "fastest")
+```
+
+```{r}
+## smooth track
+canada_2024_track <- leclerc_2024_canada_quali |> select(-time) |> 
+  mutate(x2 = leclerc_2024_canada_quali$x, y2 = leclerc_2024_canada_quali$y) |>
+  select(-x, -y) |> select(x2,y2)
+
+canada_2024_track <- bind_rows(canada_2024_track, canada_2024_track |> slice(1))
+```
+
+```{r}
+merc_color <- constructor_color("mercedes")
+sauber_color <- constructor_color("sauber")
+```
+
+```{r}
+two_driver <- ggplot() +
+  geom_path(data = canada_2024_track, aes(x=x2, y=y2, group=1), linewidth=6, color = "white") +
+  geom_point(data = russel_2024_canada_quali, aes(x = x, y = y, group = NA),
+             alpha = 0.7, color = merc_color, size = 3) +
+  geom_point(data = zhou_2024_canada_quali, aes(x = x, y = y, group = NA),
+             alpha = 0.7, color = sauber_color, size = 3) +  
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Russel v Zhou Qualifying Lap", 
+  subtitle = "Canada Grand Prix 2024")
+```
+
+```{r}
+anim = two_driver + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s")
+
+animate(anim, width = 512, height = 512, fps = 10)
+
+## look into correct track ratios function to fix how wonky this looks, actual track is much longer/skinnier
+```
+
+Fix Track Ratios
+
+```{r}
+xrange <- range(russel_2024_canada_quali$x, na.rm = TRUE) + c(-500, 500)
+yrange <- range(russel_2024_canada_quali$y, na.rm = TRUE) + c(-500, 500)
+maxdiff <- max(abs(xrange[2] - xrange[1]), abs(yrange[2] - yrange[1]), na.rm = TRUE)
+  
+xmid <- mean(xrange)
+ymid <- mean(yrange)
+  
+newxlim <- c(xmid - 0.5 * maxdiff, xmid + 0.5 * maxdiff)
+newylim <- c(ymid - 0.5 * maxdiff, ymid + 0.5 * maxdiff)
+```
+
+```{r}
+two_driver_corrected <- two_driver +
+  ggplot2::coord_fixed(xlim = newxlim, ylim = newylim)
+```
+
+```{r}
+anim = two_driver_corrected + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s")
+
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+Single Driver w Speed
+
+```{r}
+anim <- leclerc_2024_canada_quali_corrected + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s",
+       caption = glue::glue("Speed: {sprintf('%f', speed)} kmph"))
+
+animate(anim, width = 700, height = 700, fps = 10)
+```
 
 

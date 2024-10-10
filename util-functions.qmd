@@ -1,0 +1,115 @@
+```{r}
+library(dplyr)
+```
+
+```{r}
+# dictionaries
+DRIVER_COLORS <- c('alexander albon' = '#005aff', 'ayumu iwasa' = '#1e6176', 'carlos sainz' = '#ff8181',
+                   'charles leclerc' = '#dc0000', 'daniel ricciardo' = '#2b4562', 'esteban ocon' = '#ff117c',
+                   'felipe drugovich' = '#2f9b90', 'fernando alonso' = '#006f62', 'franco colapinto' = '#639aff',
+                   'frederik vesti' = '#00a6ff', 'george russell' = '#24ffff', 'isack hadjar' = '#1e6176',
+                   'jack doohan' = '#894667', 'jake dennis' = '#907400', 'kevin magnussen' = '#ffffff',
+                   'lance stroll' = '#00413b', 'lando norris' = '#eeb370', 'lewis hamilton' = '#00d2be',
+                   'liam lawson' = '#2b4562', 'logan sargeant' = '#012564', 'max verstappen' = '#fcd700',
+                   'nico hulkenberg' = '#cacaca', 'nyck de vries' = '#1e3d61', 'oliver bearman' = '#c40000',
+                   'oscar piastri' = '#ff8700', 'pato oward' = '#ee6d3a', 'pierre gasly' = '#fe86bc',
+                   'robert shwartzman' = '#9c0000', 'sergio perez' = '#ffec7b', 'theo pourchaire' = '#004601',
+                   'valtteri bottas' = '#00e701', 'yuki tsunoda' = '#356cac', 'zak osullivan' = '#1b3d97',
+                   'zhou guanyu' = '#008d01')
+```
+
+```{r}
+DRIVER_ABBR <- c('ALB' = 'alexander albon', 'ALO' = 'fernando alonso', 'BEA' = 'oliver bearman',
+                 'BOT' = 'valtteri bottas', 'COL' = 'franco colapinto', 'DEN' = 'jake dennis',
+                 'DEV' = 'nyck de vries', 'DOO' = 'jack doohan', 'DRU' = 'felipe drugovich',
+                 'GAS' = 'pierre gasly', 'HAD' = 'isack hadjar', 'HAM' = 'lewis hamilton',
+                 'HUL' = 'nico hulkenberg', 'IWA' = 'ayumu iwasa', 'LAW' = 'liam lawson',
+                 'LEC' = 'charles leclerc', 'MAG' = 'kevin magnussen', 'NOR' = 'lando norris',
+                 'OCO' = 'esteban ocon', 'OSU' = 'zak osullivan', 'OWA' = 'pato oward',
+                 'PER' = 'sergio perez', 'PIA' = 'oscar piastri', 'POU' = 'theo pourchaire',
+                 'RIC' = 'daniel ricciardo', 'RUS' = 'george russell', 'SAI' = 'carlos sainz',
+                 'SAR' = 'logan sargeant', 'SHW' = 'robert shwartzman', 'STR' = 'lance stroll',
+                 'TSU' = 'yuki tsunoda', 'VER' = 'max verstappen', 'VES' = 'frederik vesti',
+                 'ZHO' = 'zhou guanyu')
+```
+
+```{r}
+# color df
+driver_colors_df <- data.frame(driver_name = names(DRIVER_COLORS),
+                               color = DRIVER_COLORS,
+                               stringsAsFactors = FALSE)
+
+# abbr df
+driver_abbr_df <- data.frame(driver_abbr = names(DRIVER_ABBR),
+                                  driver_name = DRIVER_ABBR,
+                                  stringsAsFactors = FALSE)
+
+# Merge both data frames by driver_name
+full_driver_colors_df <- driver_translate_df |>
+  left_join(driver_colors_df, by = "driver_name")
+```
+
+```{r}
+driver_color <- function(driver_input) {
+  # Check if input is a full driver name
+  if (driver_input %in% driver_df$driver_name) {
+    return(driver_df$color[driver_df$driver_name == driver_input])
+  }
+  
+  # Check if input is a driver abbreviation
+  if (driver_input %in% driver_df$driver_abbr) {
+    return(driver_df$color[driver_df$driver_abbr == driver_input])
+  }
+  
+  # If input is not found
+  return(NA)
+}
+```
+
+```{r}
+# Define the dictionaries
+TEAM_COLORS <- c('alpine' = '#ff87bc', 'aston martin' = '#00665f', 'ferrari' = '#e8002d',
+                 'haas' = '#b6babd', 'mclaren' = '#ff8000', 'mercedes' = '#27f4d2',
+                 'rb' = '#364aa9', 'red bull' = '#0600ef', 'sauber' = '#00e700',
+                 'williams' = '#00a0dd')
+
+TEAM_ABBR <- c('AMR' = 'aston martin', 'APN' = 'alpine', 'FER' = 'ferrari',
+               'HAA' = 'haas', 'MCL' = 'mclaren', 'MER' = 'mercedes', 
+               'RB' = 'rb', 'RBR' = 'red bull', 'SAU' = 'sauber', 
+               'WIL' = 'williams')
+```
+
+```{r}
+# Convert TEAM_COLORS to a data frame
+team_colors_df <- data.frame(team_name = names(TEAM_COLORS),
+                             color = TEAM_COLORS,
+                             stringsAsFactors = FALSE)
+
+# Convert TEAM_TRANSLATE to a data frame
+team_abbr_df <- data.frame(team_abbr = names(TEAM_ABBR),
+                                team_name = TEAM_ABBR,
+                                stringsAsFactors = FALSE)
+
+# Merge both data frames by team_name
+full_team_colors_df <- team_abbr_df |>
+  left_join(team_colors_df, by = "team_name")
+```
+
+```{r}
+constructor_color <- function(constructor_input) {
+  # Check if input is a full constructor name
+  if (constructor_input %in% constructor_df$constructor_name) {
+    return(constructor_df$color[constructor_df$constructor_name == constructor_input])
+  }
+  
+  # Check if input is a constructor abbreviation
+  if (constructor_input %in% constructor_df$constructor_trans) {
+    return(constructor_df$color[constructor_df$constructor_trans == constructor_input])
+  }
+  
+  # If input is not found
+  return(NA)
+}
+```
+
+

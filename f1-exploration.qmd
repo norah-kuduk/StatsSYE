@@ -41,7 +41,7 @@ Data exploration:
 
 ```{r}
 # looking at telemetry data
-load_driver_telemetry(season = 2024, round = 6, driver = "NOR", session = "Q")
+norris_race <- load_driver_telemetry(season = 2024, round = 6, driver = "NOR", session = "R")
 ```
 
 ```{r}
