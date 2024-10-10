@@ -6,7 +6,7 @@ library(gganimate)
 library(gifski)
 ```
 
-Hamilton 2018 Singapore Grand Prix Qualifying 
+### Hamilton 2018 Singapore Grand Prix Qualifying 
 
 ```{r}
 load_session_laps(season = 2018, round = 15)
@@ -68,7 +68,7 @@ anim = p2 +
 animate(anim, width = 512, height = 512, fps = 10)
 ```
 
-Norris 2024 Singapore
+### Norris 2024 Singapore
 
 ```{r}
 norris_2024_singapore_quali <- load_driver_telemetry(season = 2024, round = 18, session = "Q", driver = "NOR", laps = "fastest")
@@ -119,7 +119,7 @@ anim = p3 +
 animate(anim, width = 512, height = 512, fps = 10)
 ```
 
-Leclerc Canada Qualifying
+### Leclerc Canada Qualifying
 
 ```{r}
 leclerc_2024_canada_quali <- load_driver_telemetry(season = 2024, round = 9, session = "Q", driver = "LEC", laps = "fastest")
@@ -161,7 +161,7 @@ animate(anim, width = 512, height = 512, fps = 10)
 ## look into correct track ratios function to fix how wonky this looks, actual track is much longer/skinnier
 ```
 
-Working on Correcting Track Ratio
+### Working on Correcting Track Ratio
 
 ```{r}
 leclerc_2024_canada_quali
@@ -193,7 +193,7 @@ anim = leclerc_2024_canada_quali_corrected +
 animate(anim, width = 700, height = 700, fps = 10)
 ```
 
-Canada Quali Exploration
+### Canada Quali Exploration
 
 ```{r}
 color_values <- full_driver_colors_df$color
@@ -232,7 +232,7 @@ fastest_laps <- ggplot(data = canada_2024_fastest_laps, aes(x = driver, y = fast
 fastest_laps
 ```
 
-Plot 2 Dots
+### Plot 2 Dots
 
 ```{r}
 russel_2024_canada_quali <- load_driver_telemetry(season = 2024, round = 9, session = "Q", driver = "RUS", laps = "fastest")
@@ -277,7 +277,7 @@ animate(anim, width = 512, height = 512, fps = 10)
 ## look into correct track ratios function to fix how wonky this looks, actual track is much longer/skinnier
 ```
 
-Fix Track Ratios
+### Fix Track Ratios
 
 ```{r}
 xrange <- range(russel_2024_canada_quali$x, na.rm = TRUE) + c(-500, 500)
@@ -305,7 +305,7 @@ anim = two_driver_corrected +
 animate(anim, width = 700, height = 700, fps = 10)
 ```
 
-Single Driver w Speed
+### Single Driver w Speed
 
 ```{r}
 anim <- leclerc_2024_canada_quali_corrected + 
@@ -316,5 +316,3 @@ anim <- leclerc_2024_canada_quali_corrected +
 
 animate(anim, width = 700, height = 700, fps = 10)
 ```
-
-
