@@ -1,5 +1,13 @@
 ## Task List
 
+## For October 24
+
+1. Add speed as an animation so that it tracks speed as well as time.
+
+2. Start thinking about interesting qualifying laps (maybe finding an interesting driver comparison or something similar).
+
+3. Clean up a little more code into functions.
+
 ## For October 10
 
 1. Get colour mapping working.
