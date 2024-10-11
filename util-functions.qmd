@@ -43,7 +43,7 @@ driver_color <- function(driver_input) {
                                     stringsAsFactors = FALSE)
   
   # Merge both data frames by driver_name
-  driver_df <- driver_translate_df |>
+  driver_df <- driver_abbr_df |>
     left_join(driver_colors_df, by = "driver_name")
   
   # Check if input is a full driver name
