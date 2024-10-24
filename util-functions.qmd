@@ -1,5 +1,3 @@
-FIX EVERYTHING
-
 ```{r}
 library(dplyr)
 ```
@@ -118,5 +116,39 @@ theme_track <- function() {
     )
 }
 ```
+
+```{r}
+# track ratio function
+corrected_track <- function(track_plot, track_coords) {
+  xrange <- range(track_coords$x, na.rm = TRUE) + c(-500, 500)
+  yrange <- range(track_coords$y, na.rm = TRUE) + c(-500, 500)
+  maxdiff <- max(abs(xrange[2] - xrange[1]), abs(yrange[2] - yrange[1]), na.rm = TRUE)
+    
+  xmid <- mean(xrange)
+  ymid <- mean(yrange)
+    
+  newxlim <- c(xmid - 0.5 * maxdiff, xmid + 0.5 * maxdiff)
+  newylim <- c(ymid - 0.5 * maxdiff, ymid + 0.5 * maxdiff)
+  
+  track_plot + coord_fixed(xlim = newxlim, ylim = newylim)
+  
+  return(track_plot)
+}
+```
+
+```{r}
+# get a smooth track
+smooth_track <- function(lap_details) {
+  track <- lap_details |> select(-time) |> 
+    mutate(x2 = lap_details$x, y2 = lap_details$y) |>
+    select(-x, -y) |> select(x2,y2)
+  
+  track <- bind_rows(track, track |> slice(1))
+  
+  return(track)
+}
+```
+
+
 
 

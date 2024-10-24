@@ -1,0 +1,54 @@
+# Playing with Interesting Qualifying Laps
+
+### Loading Packages
+```{r}
+library(f1dataR)
+library(tidyverse)
+library(dplyr)
+library(gganimate)
+library(gifski)
+
+# run util-functions
+```
+
+### Lando Norris Dutch GP 2024
+```{r}
+# Get the data
+nor_dutch_quali_2024 <- load_driver_telemetry(season = 2024, round = 15, driver = "NOR", session = "Q", laps = "fastest")
+
+dutch_2024_track <- smooth_track(nor_dutch_quali_2024)
+```
+
+```{r}
+mcl_color <- constructor_color("mclaren")
+```
+
+```{r}
+uncorrected <- ggplot() +
+  geom_path(data = dutch_2024_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = nor_dutch_quali_2024, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = mcl_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Norris Qualifying Lap", 
+  subtitle = "Dutch Grand Prix 2024")
+```
+
+```{r}
+p_nor_dutch_2024 <- corrected_track(uncorrected, nor_dutch_quali_2024)
+```
+
+```{r}
+anim <- p_nor_dutch_2024 +
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s
+       Speed:  {nor_dutch_quali_2024$speed[which.min(abs(nor_dutch_quali_2024$time-frame_along))]} kph")
+```
+
+```{r}
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+
+

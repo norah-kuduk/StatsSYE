@@ -262,7 +262,7 @@ two_driver <- ggplot() +
              alpha = 0.7, color = sauber_color, size = 3) +  
   labs(x=NULL, y=NULL) +
   theme_track() +
-  labs(title = "Russel v Zhou Qualifying Lap", 
+  labs(title = "Russell v Zhou Qualifying Lap", 
   subtitle = "Canada Grand Prix 2024")
 ```
 
@@ -332,9 +332,70 @@ leclerc_2024_canada_quali_corrected <- p4 +
 anim = leclerc_2024_canada_quali_corrected + 
   transition_reveal(along = time)+
   ease_aes('linear') +
-  labs(caption = "Time: {sprintf('%.3f', frame_along)} s")
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s | Speed: {leclerc_2024_canada_quali$speed[which.min(abs(leclerc_2024_canada_quali$time-frame_along))]} kph")
+
 
 animate(anim, width = 700, height = 700, fps = 10)
 ```
+
+```{r}
+ggplot() +
+  geom_path(data = canada_2024_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = leclerc_2024_canada_quali, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = fer_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  coord_fixed(xlim = newxlim, ylim = newylim)
+  theme_track() +
+  labs(title = "Leclerc Qualifying Lap", 
+  subtitle = "Canada Grand Prix 2024") +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s") +
+  geom_text("{leclerc_2024_canada_quali$speed[which.min(abs(leclerc_2024_canada_quali$time-frame_along))]}")
+  
+```
+
+### Testing Corrected Ratio Function with a New Track
+
+```{r}
+# monaco 2023
+load_circuit_details(season = 2023, round = 6)
+
+ver_2023_monaco_quali <- load_driver_telemetry(season = 2023, round = 6, session = "Q", driver = "VER", laps = "fastest")
+
+monaco_2023_track <- smooth_track(ver_2023_monaco_quali)
+```
+
+```{r}
+rbr_color <- constructor_color("red bull")
+```
+
+
+```{r}
+uncorrected_ver_2023_monaco <- ggplot() +
+  geom_path(data = monaco_2023_track, aes(x=x2, y=y2, group=1), linewidth=8, color = "white") +
+  geom_point(data = ver_2023_monaco_quali, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = rbr_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Verstappen Qualifying Lap", 
+  subtitle = "Monaco Grand Prix 2023")
+```
+
+```{r}
+corrected_ver_2023_monaco <- corrected_track(uncorrected_ver_2023_monaco, ver_2023_monaco_quali)
+```
+
+```{r}
+anim <- corrected_ver_2023_monaco + 
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s
+       Speed:  {ver_2023_monaco_quali$speed[which.min(abs(ver_2023_monaco_quali$time-frame_along))]} kph")
+
+
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
 
 
