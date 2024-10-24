@@ -1,5 +1,15 @@
 ## Task List
 
+## For October 31
+
+1. Speed smoothing (start with average of 4 frames).
+
+2. Draw a starting/finish line.
+
+3. Figure out how to pull a lap that is not the fastest from telemetry.
+
+4. Start constructing a plot to answer one of the questions of interest.
+
 ## For October 24
 
 1. Add speed as an animation so that it tracks speed as well as time.
