@@ -1,5 +1,15 @@
 ## Task List
 
+## For November 7
+
+1. Getting the colour labels on the plot (some way to get a descriptive legend).
+
+2. Reduce number of frames per speed.
+
+3. Look through `map()` with `safely()` to read in and bind all laps in a qualifying race.
+
+4. MH: Remind how to start an `R` packages.
+
 ## For October 31
 
 1. Speed smoothing (start with average of 4 frames).
