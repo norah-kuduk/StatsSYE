@@ -52,6 +52,12 @@ anim <- p_nor_dutch_2024 +
 animate(anim, width = 700, height = 700, fps = 10)
 ```
 
+## TODO
+
+speed smoothing -> every 4 frames take the average? can test this
+
+start/finish line representation -> strip at start/finish coordinates
+
 ## Further Exploration
 
 ### Silverstone 2022 vs Silverstone 2023
@@ -64,7 +70,7 @@ Max Verstappen 2nd 2022 - 1:41.055 (*Had fastest overall lap in qualifying, but 
 Max Verstappen Pole 2023 - 1:26.720
 Carlos Sainz 5th 2023 - 1:27.148
 
-### United States 2024
+### United States 2024x
 
 Most recent race, Q3 interupted by a yellow flag in the last seconds of running, meant that Lando Norris's lap from the first runs of qualifying was good enough for pole. Would be interesting to track data for Verstappen's final lap up until the yellow flag to see if he was considerably ahead of Norris before the yellow flag. 
 

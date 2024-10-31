@@ -1,0 +1,151 @@
+## Task List
+
+1. Speed smoothing (start with average of 4 frames).
+
+<https://www.statology.org/rolling-average-in-r/>
+<https://www.storybench.org/how-to-calculate-a-rolling-average-in-r/>
+
+2. Draw a starting/finish line.
+
+```{r}
+# Get the data
+nor_dutch_quali_2024 <- load_driver_telemetry(season = 2024, round = 15, driver = "NOR", session = "Q", laps = "fastest")
+
+dutch_2024_track <- smooth_track(nor_dutch_quali_2024)
+
+start_coord <- dutch_2024_track |> slice(1)
+```
+
+```{r}
+mcl_color <- constructor_color("mclaren")
+```
+
+```{r}
+uncorrected <- ggplot() +
+  geom_path(data = dutch_2024_track, aes(x=x2, y=y2, group=1),
+            linewidth=8, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+               color = "black", shape = 18, size = 4) +
+  geom_point(data = nor_dutch_quali_2024, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = mcl_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Norris Qualifying Lap", 
+  subtitle = "Dutch Grand Prix 2024")
+```
+
+```{r}
+p_nor_dutch_2024 <- corrected_track(uncorrected, nor_dutch_quali_2024)
+```
+
+```{r}
+## install.packages("zoo")
+library(zoo)
+
+# Calculate rolling average speed for 4 frames
+nor_dutch_quali_2024 <- nor_dutch_quali_2024 %>%
+  mutate(smoothed_speed = round(rollmean(speed, k = 7, fill = NA)))
+```
+
+```{r}
+anim <- p_nor_dutch_2024 +
+  transition_reveal(along = time)+
+  ease_aes('linear') +
+  labs(caption = "Time: {sprintf('%.3f', frame_along)} s
+       Speed:  {nor_dutch_quali_2024$smoothed_speed[which.min(abs(nor_dutch_quali_2024$time-frame_along))]} kph
+       Speed:  {nor_dutch_quali_2024$speed[which.min(abs(nor_dutch_quali_2024$time-frame_along))]} kph")
+```
+
+```{r}
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+3. Figure out how to pull a lap that is not the fastest from telemetry.
+
+4. Start constructing a plot to answer one of the questions of interest.
+
+### Silverstone 2022 vs Silverstone 2023
+
+Silverstone 2022 had a completely wet qualifying, meaning drivers were on inters for Q1, Q2, and Q3. Would be interesting to explore average lap times, as well as look at a plot of fastest wet quali lap vs dry quali lap. Could either compare pole position laps, or could compare drivers laps, or both
+
+Carlos Sainz Pole 2022 - 1:40.983
+Max Verstappen 2nd 2022 - 1:41.055 (*Had fastest overall lap in qualifying, but happened in Q2)
+
+Max Verstappen Pole 2023 - 1:26.720
+Carlos Sainz 5th 2023 - 1:27.148
+
+```{r}
+# get all of max's laps from 2022 quali
+# ver_silverstone_2022 <- load_driver_telemetry(season = 2022, round = 10, driver = "VER", session = "Q", laps = "all")
+
+# this doesnt work because time is a running total, need to find a way to get what lap number in quali the lap we want to use was
+```
+
+In order to get the lap time from the session that was not the fastest, had to find what lap number of the session it fell in
+
+<https://www.fia.com/sites/default/files/2022_10_gbr_f1_q0_timing_qualifyingsessionlaptimes_v01.pdf> for Silverstone 2022 Qualifying Session Lap Times
+
+Can find these files on the FIA website
+
+```{r}
+# get max's q3 time from 2022
+q3_verstappen_silverstone_2022 <- load_driver_telemetry(season = 2022, round = 10, driver = "VER", session = "Q", laps = 21)
+
+# get max's q3 time from 2023
+q3_verstappen_silverstone_2023 <- load_driver_telemetry(season = 2023, round = 10, driver = "VER", session = "Q", laps = "fastest")
+```
+
+```{r}
+silverstone_track <- smooth_track(q3_verstappen_silverstone_2022)
+
+start_coord <- silverstone_track |> slice(1)
+```
+
+```{r}
+rb_color <- constructor_color("red bull")
+rb2_color <- driver_color("VER")
+```
+
+```{r}
+uncorrected <- ggplot() +
+  geom_path(data = silverstone_track, aes(x=x2, y=y2, group=1),
+            linewidth=8, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+               color = "black", shape = 18, size = 4) +
+  geom_point(data = q3_verstappen_silverstone_2022, aes(x=x, y=y, group = NA),
+             alpha = 0.7, color = rb_color, size=3)+
+  geom_point(data = q3_verstappen_silverstone_2023, aes(x=x, y=y, group = NA),
+             alpha = 0.5, color = rb_color, size=3)+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Verstappen Qualifying Lap", 
+  subtitle = "Silverstone Grand Prix 2022 vs 2023")
+```
+
+```{r}
+p_verstappen_silverstone <- corrected_track(uncorrected, q3_verstappen_silverstone_2022)
+```
+
+```{r}
+anim <- p_verstappen_silverstone +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(caption = paste(
+    "2022 - Time: {sprintf('%.3f', frame_along)} s | Speed: {q3_verstappen_silverstone_2022$speed[which.min(abs(q3_verstappen_silverstone_2022$time - frame_along))]} kph\n",
+    "2023 - Time: {sprintf('%.3f', frame_along)} s | Speed: {q3_verstappen_silverstone_2023$speed[which.min(abs(q3_verstappen_silverstone_2023$time - frame_along))]} kph"
+  ))
+
+```
+
+```{r}
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+
+
+
+
+
+
+
+
