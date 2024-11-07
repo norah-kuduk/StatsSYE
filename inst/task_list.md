@@ -1,5 +1,15 @@
 ## Task List
 
+## For November 14
+
+1. Document all functions in package.
+
+2. Get necessary imports.
+
+3. Getting the colour labels on the plot (some way to get a descriptive legend).
+
+4. Reduce number of frames per speed.
+
 ## For November 7
 
 1. Getting the colour labels on the plot (some way to get a descriptive legend).
