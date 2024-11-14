@@ -1,5 +1,13 @@
 ## Task List
 
+## For November 21
+
+1. *Fix safely(map()) function*.
+
+2. Mess with the speed.
+
+3. fix labels for the two lap maps.
+
 ## For November 14
 
 1. Document all functions in package.
