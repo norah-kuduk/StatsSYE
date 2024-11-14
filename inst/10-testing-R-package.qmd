@@ -1,0 +1,42 @@
+```{r}
+library(f1dataR)
+library(f1animateR)
+library(tidyverse)
+```
+
+```{r}
+constructor_color("red bull")
+```
+
+### Getting all of the laps from a session to be mapped to a key
+
+```{r}
+# Function to load telemetry data for a specific lap
+get_telemetry <- function(lap) {
+  load_driver_telemetry(
+    season = 2022,
+    round = 10,
+    driver = "VER",
+    session = "Q",
+    laps = lap
+  ) |> 
+    mutate(lap_number = lap)
+} 
+
+# Use map_dfr to iterate over laps 1 to 50 and combine the data
+telemetry_data <- map_dfr(1:23, get_telemetry)
+```
+
+```{r}
+ver_quali_2022 <- get_quali_telemetry(season = 2022, round = 10, driver = "VER")
+```
+
+```{r}
+ver_lap <- ver_quali_2022 |> filter(lap_number == 24)
+```
+
+```{r}
+
+```
+
+
