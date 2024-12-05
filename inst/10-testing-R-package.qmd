@@ -11,7 +11,6 @@ constructor_color("red bull")
 
 ### Getting all of the laps from a session to be mapped to a key
 
-```{r}
 # Function to load telemetry data for a specific lap
 get_telemetry <- function(lap) {
   load_driver_telemetry(
@@ -22,11 +21,11 @@ get_telemetry <- function(lap) {
     laps = lap
   ) |> 
     mutate(lap_number = lap)
-} 
+}
 
 # Use map_dfr to iterate over laps 1 to 50 and combine the data
 telemetry_data <- map_dfr(1:23, get_telemetry)
-```
+
 
 ```{r}
 ver_quali_2022 <- get_quali_telemetry(season = 2022, round = 10, driver = "VER")
@@ -178,9 +177,9 @@ uncorrected <- ggplot() +
   labs(title = "Verstappen Qualifying Lap", 
   subtitle = paste(
     "Silverstone Grand Prix 2022 vs 2023\n",
-    "2022: 1:41.055\n",
-    "2023: 1:26.270"
+    "2022: 1:41.055 | 2023: 1:26.270"
   )
-  )
+)
+uncorrected
 ```
 
