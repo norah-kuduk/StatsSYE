@@ -1,5 +1,9 @@
 ## Task List
 
+## For December 12
+
+1. Put some of the work you've done into functions.
+
 ## For November 21
 
 1. *Fix safely(map()) function*.
