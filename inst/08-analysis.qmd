@@ -105,6 +105,14 @@ q3_verstappen_silverstone_2023 <- load_driver_telemetry(season = 2023, round = 1
 ```
 
 ```{r}
+load_driver_telemetry(season = 2022, round = 10, driver = "VER", session = "Q", laps = 21)
+```
+```{r}
+load_driver_telemetry
+```
+
+
+```{r}
 load_driver_telemetry(season = 2022, round = 10, driver = "VER", session = "Q", laps = 24)
 ```
 
@@ -162,7 +170,7 @@ q3_verstappen_silverstone_2023 <- q3_verstappen_silverstone_2023 |> mutate(year 
 ```
 
 ```{r}
-plot_data <- bind_rows(q3_verstappen_silverstone_2022, q3_verstappen_silverstone_2023)
+plot_data <- bind_rows(q3_verstappen_silverstone_2022, q3_verstappen_silverstone_2023) |> mutate(year = as.factor(year))
 ```
 
 ```{r}
@@ -172,7 +180,7 @@ uncorrected <- ggplot() +
   geom_point(data = start_coord, aes(x = x2, y = y2),
                color = "black", shape = 18, size = 4) +
   geom_point(data = plot_data, aes(x=x, y=y, group = year, color = year),
-             alpha = 0.7, size=3)+
+             alpha = 0.7, size=3) +
   labs(x=NULL, y=NULL) +
   theme_track() +
   labs(title = "Verstappen Qualifying Lap", 
@@ -191,12 +199,10 @@ anim <- p_verstappen_silverstone +
     "2022 - Time: {sprintf('%.3f', frame_along)} s | Speed: {q3_verstappen_silverstone_2022$speed[which.min(abs(q3_verstappen_silverstone_2022$time - frame_along))]} kph\n",
     "2023 - Time: {sprintf('%.3f', frame_along)} s | Speed: {q3_verstappen_silverstone_2023$speed[which.min(abs(q3_verstappen_silverstone_2023$time - frame_along))]} kph"
   ))
-
 ```
 
 ```{r}
 animate(anim, width = 700, height = 700, fps = 10)
-
 ```
 
 

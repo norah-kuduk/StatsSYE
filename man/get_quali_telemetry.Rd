@@ -4,16 +4,18 @@
 \alias{get_quali_telemetry}
 \title{Get Qualifying Telemetry Data for Multiple Laps Safely}
 \usage{
-get_quali_telemetry(lap = 1:50, season, round, driver)
+get_quali_telemetry(laps = 1:50, season, round, driver, verbose = FALSE)
 }
 \arguments{
-\item{lap}{A numeric vector specifying the lap numbers to load telemetry data for. Default is 1 to 50.}
+\item{laps}{A numeric vector specifying the lap numbers to load telemetry data for. Default is 1 to 50.}
 
 \item{season}{The racing season (e.g., 2022).}
 
 \item{round}{The round of the race (e.g., 10).}
 
 \item{driver}{The driver's code (e.g., "VER").}
+
+\item{verbose}{A logical value indicating whether to display messages for each lap loading. Default is FALSE.}
 }
 \value{
 A data frame containing telemetry data for the specified laps with an added \code{lap_number} column.
@@ -24,5 +26,5 @@ Get Qualifying Telemetry Data for Multiple Laps Safely
 }
 \examples{
 # Example usage
-get_quali_telemetry(season = 2022, round = 10, driver = "VER")
+get_quali_telemetry(season = 2022, round = 10, driver = "VER", verbose = TRUE)
 }

@@ -2,6 +2,7 @@
 library(f1dataR)
 library(f1animateR)
 library(tidyverse)
+library(gganimate)
 ```
 
 ```{r}
@@ -32,11 +33,154 @@ ver_quali_2022 <- get_quali_telemetry(season = 2022, round = 10, driver = "VER")
 ```
 
 ```{r}
-ver_lap <- ver_quali_2022 |> filter(lap_number == 24)
+ver_lap <- ver_quali_2022 |> filter(lap_number == 21)
 ```
 
 ```{r}
+norris_quali <- get_quali_telemetry(lap = 1:2, season = 2024, round = 15, driver = "NOR", verbose = TRUE)
+```
+
+### Put it all together
+
+Copy of code from 08-anaylsis, mapping verstappen 2022 vs 2023 silverstone
+
+```{r}
+ver_quali_2022 <- get_quali_telemetry(season = 2022, round = 10, driver = "VER") |> filter(lap_number == 21)
+```
+
+```{r}
+ver_quali_2023 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 10, driver = "VER")
+```
+
+```{r}
+## ver_lap_2022 <- ver_quali_2022 |> mutate(lap_number = as.factor(lap_number)) |> group_by(lap_number) |> arrange(desc(time)) |> slice(1) |> ungroup() |> arrange(time) |> slice(1)
+```
+
+```{r}
+silverstone_track <- smooth_track(ver_quali_2022)
+
+start_coord <- silverstone_track |> slice(1)
+```
+
+```{r}
+rb_color <- constructor_color("red bull")
+ver_color <- driver_color("VER")
+```
+
+```{r}
+ver_quali_2022 <- ver_quali_2022 |> mutate(lap_number = as.factor(lap_number))
+ver_quali_2023 <- ver_quali_2023 |> mutate(lap_number = as.factor(lap_number))
+```
+
+```{r}
+ver_quali_2022 <- ver_quali_2022 |> mutate(year = 2022)
+ver_quali_2023 <- ver_quali_2023 |> mutate(year = 2023)
+```
+
+```{r}
+plot_data <- bind_rows(ver_quali_2022, ver_quali_2023) |> mutate(year = as.factor(year))
+```
+
+```{r}
+# change on alpha because its the same driver, would change on color if it were two different drivers
+uncorrected <- ggplot() +
+  geom_path(data = silverstone_track, aes(x=x2, y=y2, group=1),
+            linewidth=8, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+               color = "black", shape = 18, size = 4) +
+  geom_point(data = plot_data, aes(x=x, y=y, group = year, color = year),
+            size=3) +
+  scale_color_manual(values = c("2022" = rb_color, "2023" = ver_color)) +  
+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Verstappen Qualifying Lap", 
+  subtitle = "Silverstone Grand Prix 2022 vs 2023",
+  )
+```
+
+```{r}
+p_verstappen_silverstone <- corrected_track(uncorrected, ver_quali_2022)
+```
+
+```{r}
+p_verstappen_silverstone
+```
+
+```{r}
+anim <- p_verstappen_silverstone +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(caption = paste(
+    "2022 - Time: {sprintf('%.3f', frame_along)} s | Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$year == 2022] - frame_along))]} kph\n",
+    "2023 - Time: {sprintf('%.3f', frame_along)} s | Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$year == 2023] - frame_along))]} kph"
+  ))
 
 ```
 
+```{r}
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+### Speed Smoothing
+
+```{r}
+plot_data <- plot_data |>
+  group_by(year) |>
+  # create groups of 4
+  mutate(group = ceiling(row_number() / 4)) |>
+  # calculate the mean speed for each group and assign to speed_smooth
+  group_by(group) |>
+  mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
+  ungroup() |>
+  # remove the temporary grouping variable
+  select(-group)
+```
+
+```{r}
+anim <- p_verstappen_silverstone +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(
+      caption = paste(
+      "Time: {sprintf('%.3f', frame_along)} s\n",
+      "2022 Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$year == 2022] - frame_along))]} kph\n",
+      "2023 Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$year == 2023] - frame_along))]} kph"
+    )
+  )
+```
+
+```{r}
+animate(anim, width = 700, height = 700, fps = 10)
+```
+
+### Time Fixing
+
+```{r}
+# get total time for each lap
+# go from seconds to minutes and milliseconds
+
+plot_data |> group_by(year) |> summarise(total_time = max(time))
+```
+
+```{r}
+uncorrected <- ggplot() +
+  geom_path(data = silverstone_track, aes(x=x2, y=y2, group=1),
+            linewidth=8, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+               color = "black", shape = 18, size = 4) +
+  geom_point(data = plot_data, aes(x=x, y=y, group = year, color = year),
+            size=3) +
+  scale_color_manual(values = c("2022" = rb_color, "2023" = ver_color)) +  
+
+  labs(x=NULL, y=NULL) +
+  theme_track() +
+  labs(title = "Verstappen Qualifying Lap", 
+  subtitle = paste(
+    "Silverstone Grand Prix 2022 vs 2023\n",
+    "2022: 1:41.055\n",
+    "2023: 1:26.270"
+  )
+  )
+```
 

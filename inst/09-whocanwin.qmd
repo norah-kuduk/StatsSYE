@@ -3,59 +3,81 @@ library(f1dataR)
 library(ggplot2)
 library(dplyr)
 
-# Constants
+# constants
 SEASON <- 2024
-ROUND <- 19
+ROUND <- 23 # after brazil
+```
 
+```{r}
 # Function to get driver standings using f1dataR
 get_drivers_standings <- function() {
   standings <- load_standings(season = SEASON, round = ROUND)
+  # select only unique drivers (ollie bearman im looking at you)
+  standings <- standings |> 
+    group_by(driver_id) |> 
+    slice(1) |> 
+    ungroup() |> 
+    arrange(position)
   standings
 }
+```
 
-# Function to calculate max points remaining in season
+```{r}
+
+# function to calculate max points remaining in season
 calculate_max_points_for_remaining_season <- function() {
-  POINTS_FOR_SPRINT <- 8 + 25 + 1   # Sprint win, race win, fastest lap
-  POINTS_FOR_CONVENTIONAL <- 25 + 1 # Race win, fastest lap
+  POINTS_FOR_SPRINT <- 8 + 25 + 1   # sprint win, race win, fastest lap
+  POINTS_FOR_CONVENTIONAL <- 25 + 1 # race win, fastest lap
   
-  # Fetching event schedule and filtering remaining events
+  # fetching event schedule and filtering remaining events
   events <- load_schedule(season = SEASON) |> mutate(round = as.integer(round))
-  remaining_events <- events %>% filter(round > ROUND)
+  remaining_events <- events |> filter(round > ROUND)
   
-  # Count sprints and conventional races
+  # count sprints and conventional races
   sprint_events <- sum(!(is.na(remaining_events$sprint_date)))
   conventional_events <- sum(is.na(remaining_events$sprint_date))
   
-  # Calculate total possible points
+  # calculate total possible points
   sprint_points <- sprint_events * POINTS_FOR_SPRINT
   conventional_points <- conventional_events * POINTS_FOR_CONVENTIONAL
   
   sprint_points + conventional_points
 }
+```
 
-# Function to determine who can still win
+```{r}
+
+# function to determine who can still win
 calculate_who_can_win <- function(driver_standings, max_points) {
   leader_points <- as.integer(driver_standings$points[1])
   
-  driver_standings %>%
+  driver_standings |>
     mutate(
       max_possible_points = as.integer(points) + max_points,
       can_win = ifelse(max_possible_points >= leader_points, "Yes", "No")
-    ) %>%
-    select(position, driver = givenName, surname = familyName, points, max_possible_points, can_win)
+    ) |>
+    select(position, driver_id, points, max_possible_points, can_win)
 }
+```
 
+```{r}
 # Get the current driver standings
-driver_standings <- get_drivers_standings(season = 2024, round = ROUND)
+driver_standings <- get_drivers_standings()
+```
 
+```{r}
 # Get maximum points possible for remaining season
 max_points <- calculate_max_points_for_remaining_season()
+```
 
+```{r}
 # Calculate who can win and print results
 win_data <- calculate_who_can_win(driver_standings, max_points)
+```
 
+```{r}
 # Plotting the data using ggplot2
-ggplot(win_data, aes(x = reorder(paste(driver, surname), -max_possible_points), y = max_possible_points)) +
+ggplot(win_data, aes(x = reorder(paste(driver_id), -max_possible_points), y = max_possible_points)) +
   geom_col(aes(fill = can_win), show.legend = TRUE) +
   geom_text(aes(label = paste("Points:", points)), vjust = -0.5) +
   labs(
@@ -66,5 +88,81 @@ ggplot(win_data, aes(x = reorder(paste(driver, surname), -max_possible_points), 
   theme_minimal() +
   scale_fill_manual(values = c("Yes" = "green", "No" = "red")) +
   coord_flip()
+```
+
+```{r}
+# Function to get constructor standings by summing driver points
+get_constructors_standings <- function(driver_standings) {
+  driver_standings |> 
+    group_by(constructor_id) |> 
+    summarise(
+      constructor_id = first(constructor_id), # Assume each driver has the same constructor name
+      points = sum(as.integer(points), na.rm = TRUE)
+    ) |> 
+    arrange(desc(points)) |> 
+    mutate(position = row_number())
+}
+```
+
+```{r}
+calculate_who_can_win_constructors <- function(constructor_standings, max_points) {
+  leader_points <- constructor_standings$points[1]
+  
+  constructor_standings |> 
+    mutate(
+      max_possible_points = points + max_points,
+      can_win = ifelse(max_possible_points >= leader_points, "Yes", "No")
+    ) |> 
+    select(position, constructor_id, points, max_possible_points, can_win)
+}
+```
+
+```{r}
+# Function to calculate max points remaining in the season for constructors
+calculate_max_points_for_remaining_season_constructors <- function() {
+  POINTS_FOR_SPRINT_PER_DRIVER <- 8 + 25 + 1   # sprint win, race win, fastest lap
+  POINTS_FOR_CONVENTIONAL_PER_DRIVER <- 25 + 1 # race win, fastest lap
+  
+  # Fetching event schedule and filtering remaining events
+  events <- load_schedule(season = SEASON) |> mutate(round = as.integer(round))
+  remaining_events <- events |> filter(round > ROUND)
+  
+  # Count sprints and conventional races
+  sprint_events <- sum(!(is.na(remaining_events$sprint_date)))
+  conventional_events <- sum(is.na(remaining_events$sprint_date))
+  
+  # Calculate total possible points for two drivers
+  sprint_points <- sprint_events * (8 + 25 + 1 + 7 + 18)
+  conventional_points <- conventional_events * (25 + 1 + 18)
+  
+  sprint_points + conventional_points
+}
 
 ```
+
+```{r}
+# Step 1: Get driver standings and calculate constructor standings
+driver_standings <- get_drivers_standings()
+constructor_standings <- get_constructors_standings(driver_standings)
+
+# Step 2: Get maximum possible points for remaining season
+max_points <- calculate_max_points_for_remaining_season_constructors()
+
+# Step 3: Determine constructors who can still win
+constructor_win_data <- calculate_who_can_win_constructors(constructor_standings, max_points)
+
+# Step 4: Plotting Constructor Data
+ggplot(constructor_win_data, aes(x = reorder(constructor_id, -max_possible_points), y = max_possible_points)) +
+  geom_col(aes(fill = can_win), show.legend = TRUE) +
+  geom_text(aes(label = paste("Points:", points)), vjust = -0.5) +
+  labs(
+    title = "Constructors' Championship Possibilities",
+    x = "Constructor",
+    y = "Theoretical Maximum Points"
+  ) +
+  theme_minimal() +
+  scale_fill_manual(values = c("Yes" = "green", "No" = "red")) +
+  coord_flip()
+
+```
+
