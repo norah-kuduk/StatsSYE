@@ -44,11 +44,11 @@ norris_quali <- get_quali_telemetry(lap = 1:2, season = 2024, round = 15, driver
 Copy of code from 08-anaylsis, mapping verstappen 2022 vs 2023 silverstone
 
 ```{r}
-ver_quali_2022 <- get_quali_telemetry(season = 2022, round = 10, driver = "VER") |> filter(lap_number == 21)
+ver_quali_2022 <- get_quali_telemetry(laps = 21, season = 2022, round = 10, driver = "VER")
 ```
 
 ```{r}
-ver_quali_2023 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 10, driver = "VER")
+ver_quali_2023 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 10, driver = "VER", verbose = TRUE)
 ```
 
 ```{r}
@@ -127,7 +127,7 @@ animate(anim, width = 700, height = 700, fps = 10)
 plot_data <- plot_data |>
   group_by(year) |>
   # create groups of 4
-  mutate(group = ceiling(row_number() / 4)) |>
+  mutate(group = ceiling(row_number() / 16)) |>
   # calculate the mean speed for each group and assign to speed_smooth
   group_by(group) |>
   mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
@@ -181,5 +181,38 @@ uncorrected <- ggplot() +
   )
 )
 uncorrected
+```
+
+```{r}
+anim <- p_verstappen_silverstone +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(
+      caption = paste(
+      "Time: {sprintf('%.3f', frame_along)} s\n",
+      "2022 Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$year == 2022] - frame_along))]} kph\n",
+      "2023 Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$year == 2023] - frame_along))]} kph"
+    )
+  )
+```
+
+```{r}
+animate(anim, width = 700, height = 800, fps = 10)
+```
+
+### Function testing
+
+```{r}
+ver_quali_2022 <- get_quali_telemetry(laps = 21, season = 2022, round = 10, driver = "VER")
+```
+
+```{r}
+ver_quali_2023 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 10, driver = "VER", verbose = TRUE)
+```
+
+```{r}
+years <- c(2022, 2023)
+
+bind_data_year(ver_quali_2022, ver_quali_2023, years=years)
 ```
 
