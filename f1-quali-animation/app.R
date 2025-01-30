@@ -96,7 +96,7 @@ server <- function(input, output, session) {
 
     kable(quali_laps, format = "html") |>
       kable_styling("striped", full_width = FALSE)
-  }, sanitize.text.function = function(x) x)
+  })
 }
 
 shinyApp(ui, server)
