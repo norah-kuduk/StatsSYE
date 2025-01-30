@@ -1,0 +1,38 @@
+```{r}
+library(f1dataR)
+library(f1animateR)
+library(tidyverse)
+library(gganimate)
+```
+
+Plotting Abu Dhabi 2024
+
+Lando Norris Pole 1:22.595
+
+Jack Doohan 20th 1:24.105
+
+```{r}
+norris_abudhabi_2024 <- get_quali_telemetry(laps = fastest, season = 2024, round = 22, driver = "NOR", verbose = TRUE)
+doohan_abudhabi_2024 <- get_quali_telemetry(laps = fastest, season = 2024, round = 22, driver = "DOO", verbose = TRUE)
+```
+
+```{r}
+data <- get_session_drivers_and_teams(2024, 1, "Q") |> mutate(driver_code = abbreviation)
+```
+
+```{r}
+comparison <- data |>
+        filter(driver_code == "VER" | driver_code == "PER")
+```
+
+
+```{r}
+load_session_laps(2024, 1, "Q")
+```
+
+```{r}
+load_schedule(2024)
+```
+
+
+

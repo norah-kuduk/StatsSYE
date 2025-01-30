@@ -211,6 +211,15 @@ ver_quali_2023 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 1
 ```
 
 ```{r}
+ver_quali_2023 <- get_quali_telemetry(season = 2023, round = 10, driver = "VER", verbose = TRUE)
+```
+
+```{r}
+test <- load_session_laps(season = 2022, round = 10, session = "Q", add_weather = TRUE)
+```
+
+
+```{r}
 years <- c(2022, 2023)
 
 bind_data_year(ver_quali_2022, ver_quali_2023, years=years)
