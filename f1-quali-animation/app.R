@@ -38,6 +38,8 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
+  use_virtualenv("f1dataR_env")
+
   # fetch qualifying data for a given season and round
   fetch_quali_data <- function(season, round) {
     tryCatch(
@@ -76,7 +78,7 @@ server <- function(input, output, session) {
     selectInput("driver_2", "Select Driver 2:", choices = driver_choices)
   })
 
-  # Display comparison table
+  # display comparison table
   output$quali_comparison <- renderTable({
     if (input$compare_mode == "same_session") {
       req(input$driver_1, input$driver_2)
@@ -96,7 +98,7 @@ server <- function(input, output, session) {
 
     kable(quali_laps, format = "html") |>
       kable_styling("striped", full_width = FALSE)
-  })
+  }, sanitize.text.function = function(x) x)
 }
 
 shinyApp(ui, server)
