@@ -1,5 +1,11 @@
 ## Task List
 
+## For February 6
+
+1. Continue working on the app, getting the tabs and other ui set up.
+
+2. Get data that is needed to run the animation.
+
 ## For January 30
 
 1. Get started on the app.
