@@ -1,5 +1,9 @@
 ## Task List
 
+## For January 30
+
+1. Get started on the app.
+
 ## For December 12
 
 1. Put some of the work you've done into functions.
