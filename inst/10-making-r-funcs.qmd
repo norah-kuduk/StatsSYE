@@ -125,7 +125,7 @@ animate(anim, width = 700, height = 700, fps = 10)
 
 ```{r}
 plot_data <- plot_data |>
-  group_by(year) |>
+  group_by(driver) |>
   # create groups of 4
   mutate(group = ceiling(row_number() / 16)) |>
   # calculate the mean speed for each group and assign to speed_smooth

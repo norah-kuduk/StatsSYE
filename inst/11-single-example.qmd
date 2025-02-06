@@ -5,19 +5,10 @@ library(tidyverse)
 library(gganimate)
 ```
 
-Plotting Abu Dhabi 2024
-
-Lando Norris Pole 1:22.595
-
-Jack Doohan 20th 1:24.105
+App Testing 
 
 ```{r}
-norris_abudhabi_2024 <- get_quali_telemetry(laps = fastest, season = 2024, round = 22, driver = "NOR", verbose = TRUE)
-doohan_abudhabi_2024 <- get_quali_telemetry(laps = fastest, season = 2024, round = 22, driver = "DOO", verbose = TRUE)
-```
-
-```{r}
-data <- get_session_drivers_and_teams(2024, 1, "Q") |> mutate(driver_code = abbreviation)
+data <- get_session_drivers_and_teams(2024, 24, "Q") |> mutate(driver_code = abbreviation)
 ```
 
 ```{r}
@@ -25,14 +16,106 @@ comparison <- data |>
         filter(driver_code == "VER" | driver_code == "PER")
 ```
 
-
 ```{r}
-load_session_laps(2024, 1, "Q")
+test <- load_session_laps(2024, 1, "Q") |> filter(is_accurate == TRUE)
 ```
 
 ```{r}
 load_schedule(2024)
 ```
+
+```{r}
+get_session_drivers_and_teams(2024, 24, "Q")
+```
+
+
+Plotting Abu Dhabi 2024
+
+Lando Norris Pole 1:22.595
+
+Jack Doohan 20th 1:24.105
+
+```{r}
+norris_abudhabi_2024 <- get_quali_telemetry(laps = "fastest", season = 2024, round = 24, driver = "NOR", verbose = TRUE)
+doohan_abudhabi_2024 <- get_quali_telemetry(laps = "fastest", season = 2024, round = 24, driver = "DOO", verbose = TRUE)
+```
+
+```{r}
+# smooth Abu Dhabi track data
+abu_dhabi_track <- smooth_track(norris_abudhabi_2024)
+start_coord <- abu_dhabi_track |> slice(1)
+```
+
+```{r}
+# det team and driver colors
+norris_color <- driver_color("NOR")
+doohan_color <- driver_color("DOO")
+```
+
+```{r}
+# Add driver labels and combine data
+norris_abudhabi_2024 <- norris_abudhabi_2024 |> mutate(driver = "Norris")
+doohan_abudhabi_2024 <- doohan_abudhabi_2024 |> mutate(driver = "Doohan")
+```
+
+```{r}
+plot_data <- bind_rows(norris_abudhabi_2024, doohan_abudhabi_2024) |> 
+  mutate(driver = as.factor(driver))
+```
+
+```{r}
+# Static plot
+static_plot <- ggplot() +
+  geom_path(data = abu_dhabi_track, aes(x = x2, y = y2, group = 1), 
+            linewidth = 8, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2), 
+             color = "black", shape = 18, size = 4) +
+  geom_point(data = plot_data, aes(x = x, y = y, group = driver, color = driver), 
+             size = 3) +
+  scale_color_manual(values = c("Norris" = norris_color, "Doohan" = doohan_color)) +
+  theme_track() +
+  labs(title = "Norris vs. Doohan Qualifying Lap", 
+       subtitle = "Abu Dhabi Grand Prix 2024", 
+       x = NULL, y = NULL)
+```
+
+```{r}
+# Correct the track alignment
+corrected_plot <- corrected_track(static_plot, norris_abudhabi_2024)
+```
+
+```{r}
+plot_data |> group_by(driver) |>
+    # create groups of 4
+    mutate(group = ceiling(row_number() / 16)) |>
+    # calculate the mean speed for each group and assign to speed_smooth
+    group_by(group) |>
+    mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
+    ungroup() |>
+    # remove the temporary grouping variable
+    select(-group)
+```
+
+```{r}
+# Animate the lap with speed overlay
+animated_plot <- corrected_plot +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(
+    caption = paste(
+      "Time: {sprintf('%.3f', frame_along)} s\n",
+      "Norris Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == 'Norris'] - frame_along))]} kph\n",
+      "Doohan Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == 'Doohan'] - frame_along))]} kph"
+    )
+  )
+
+# Render animation
+animate(animated_plot, width = 700, height = 700, fps = 10)
+```
+
+
+
+
 
 
 

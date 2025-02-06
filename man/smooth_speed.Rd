@@ -4,17 +4,22 @@
 \alias{smooth_speed}
 \title{Smooth Speed Data}
 \usage{
-smooth_speed(data, group_size = 16)
+smooth_speed(data, grouping, frame_size = 16)
 }
 \arguments{
-\item{data}{A data frame containing at least \code{year} and \code{speed} columns.}
+\item{data}{A data frame containing at least a \code{speed} column.}
 
-\item{group_size}{An integer specifying the size of groups for smoothing (default: 16).}
+\item{grouping}{A variable containing either \code{driver} or \code{year} to group speed by}
+
+\item{frame_size}{The number of data points per smoothing group (default: 16).}
 }
 \value{
-A data frame with an added \code{speed_smooth} column containing smoothed speed values.
-The temporary grouping variable is removed.
+A data frame with a new \code{speed_smooth} column.
 }
 \description{
-Smooth Speed Data
+This function groups telemetry data into segments and calculates a smoothed speed value.
+}
+\examples{
+# Assuming `plot_data` contains F1 telemetry data:
+smoothed_data <- smooth_speed(plot_data, grouping = "driver")
 }
