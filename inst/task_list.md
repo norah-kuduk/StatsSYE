@@ -1,5 +1,9 @@
 ## Task List
 
+## For February 20
+
+1. Continue working on the app, getting ui set up and starting to work on the animation.
+
 ## For February 6
 
 1. Continue working on the app, getting the tabs and other ui set up.
