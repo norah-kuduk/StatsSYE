@@ -1,5 +1,12 @@
 ## Task List
 
+## For February 27
+
+1. Continue working on the app, looking at the inputs to update reactively when the button is clicked.
+
+2. Continue working on animation.
+
+
 ## For February 20
 
 1. Continue working on the app, getting ui set up and starting to work on the animation.
