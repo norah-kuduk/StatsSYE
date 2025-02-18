@@ -17,7 +17,7 @@ comparison <- data |>
 ```
 
 ```{r}
-test <- load_session_laps(2024, 1, "Q") |> filter(is_accurate == TRUE)
+test <- load_session_laps(2024, 1, "Q")
 ```
 
 ```{r}

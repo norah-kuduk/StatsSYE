@@ -6,6 +6,7 @@ library(f1dataR)
 library(f1animateR)
 library(knitr)
 library(kableExtra)
+library(gganimate)
 
 ## setup_fastf1()
 use_virtualenv("f1dataR_env")
@@ -50,37 +51,59 @@ ui <- fluidPage(
     tabPanel("Qualifying Animation",
              sidebarLayout(
                sidebarPanel(
-                 radioButtons("compare_mode", "Comparison Mode:",
+                 checkboxInput("carry_over", "Use Selections from Data Exploration", value = FALSE),
+
+                 radioButtons("anim_compare_mode", "Comparison Mode:",
                               choices = c("Same Session - Two Drivers" = "same_session",
                                           "Same Driver - Two Seasons" = "diff_seasons")),
 
                  conditionalPanel(
-                   condition = "input.compare_mode == 'same_session'",
-                   selectInput("season_1", "Select Season:", choices = 2018:2024, selected = 2024),
+                   condition = "input.anim_compare_mode == 'same_session'",
+                   selectInput("anim_season_1", "Select Season:", choices = 2018:2024, selected = 2024),
                    uiOutput("anim_round_select"),
                    uiOutput("anim_driver_select_1"),
                    uiOutput("anim_driver_select_2"),
-                   actionButton("animate_btn", "Animate Qualifying")
+                   actionButton("animate_btn", "Animate Qualifying"),
+                   actionButton("stop_btn", "Clear Animation")
+
                  ),
 
                  conditionalPanel(
-                   condition = "input.compare_mode == 'diff_seasons'",
+                   condition = "input.anim_compare_mode == 'diff_seasons'",
                    selectInput("driver_same", "Select Driver:", choices = NULL),
                    selectInput("season_a", "Select First Season:", choices = 2018:2024, selected = 2024),
                    selectInput("season_b", "Select Second Season:", choices = 2018:2024, selected = 2023),
                    uiOutput("round_ui"),
-                   actionButton("animate_btn", "Animate Qualifying")
+                   actionButton("animate_btn", "Animate Qualifying"),
+                   actionButton("stop_btn", "Clear Animation")
                  )
 
                ),
                mainPanel(
-                 plotOutput("animation_output")  # TODO make animation
+                 plotOutput("animation_output")
                )
              ))
   )
 )
 
 server <- function(input, output, session) {
+  # TODO possibly add a way to carry over inputs from data exploration (default?)
+
+  observe({
+    req(input$carry_over)  # Only execute when carry_over is checked
+
+    # Ensure inputs exist before updating
+    req(input$compare_mode, input$season_1, input$driver_1, input$driver_2, input$round_1)
+
+    # If comparison mode is "same_session", update corresponding inputs
+    if (input$compare_mode == "same_session") {
+      updateRadioButtons(session, "anim_compare_mode", selected = input$compare_mode)
+      updateSelectInput(session, "anim_season_1", selected = input$season_1)
+      updateSelectInput(session, "anim_round_select", selected = input$round_1)
+      updateSelectInput(session, "anim_driver_select_1", selected = input$driver_1)
+      updateSelectInput(session, "anim_driver_select_2", selected = input$driver_2)
+    }
+  })
 
   #### Functions ####
 
@@ -144,8 +167,10 @@ server <- function(input, output, session) {
 
       quali_laps <- fetch_quali_data(input$season_1, input$round_1) |>
         filter(driver == input$driver_1 | driver == input$driver_2) |>
-        select(driver, lap_time, lap_number, compound)
+        filter(lap_time > 0) |>
+        select(driver, lap_time, lap_number, compound, session_type)
       # TODO filter out NaNs
+
 
     } else {
       # TODO when compare mode is diff_seasons
@@ -158,9 +183,22 @@ server <- function(input, output, session) {
 
   #### Animation Panel ####
 
+  # TODO separate comparison modes
+
+  # need to add separate season selection
+  anim_schedule_data <- reactive({
+    load_schedule(input$anim_season_1)
+  })
+
+  anim_quali_data_1 <- reactive({
+    get_session_drivers_and_teams(input$anim_season_1, input$round_1, "Q") |>
+      mutate(driver_code = abbreviation) |>
+      select(-abbreviation)
+  })
+
   # populate round selection for a season (animation)
   output$anim_round_select <- renderUI({
-    data <- schedule_data()
+    data <- anim_schedule_data()
     selectInput("round_1", "Select Round: ", choices = data$race_name)
   })
 
@@ -177,17 +215,16 @@ server <- function(input, output, session) {
     selectInput("driver_2", "Select Driver 2:", choices = driver_choices)
   })
 
-  output$animate_ui <- renderUI({
-    req(input$driver_1, input$driver_2)
-    actionButton("animate_btn", "Animate Qualifying")
-  })
 
   # reactive variable to store telemetry data
   plot_data <- reactiveVal(NULL)
   track_data <- reactiveVal(NULL)
+  animation_running <- reactiveVal(FALSE)
 
   # animate button clicked
   observeEvent(input$animate_btn, {
+    animation_running(TRUE)
+
     # fetch telemetry data
     req(input$driver_1, input$driver_2, input$season_1, input$round_1)
 
@@ -207,16 +244,27 @@ server <- function(input, output, session) {
     # combine telemetry data
     combined_data <- bind_rows(driver1_data, driver2_data) |> mutate(driver = as.factor(driver))
 
-    plot_data(combined_data)
+    # only proceed if animation is still running
+    if (animation_running()) {
+      plot_data(combined_data)
+    }
+  })
+
+  observeEvent(input$stop_btn, {
+    animation_running(FALSE)  # stop animation
+    plot_data(NULL)  # clear data to stop rendering
   })
 
   # Generate animated plot
-  output$animation_output <- renderPlot({
-    req(plot_data(), track_data())
-    track_data <- track_data()
-    start_coord <- track_data |> slice(1)
+  output$animation_output <- renderImage({
+    req(plot_data(), track_data(), animation_running())  # Ensure animation is running
+    outfile <- tempfile(fileext='.gif')
 
-    ggplot() +
+    t_df <- track_data()
+
+    start_coord <- t_df |> slice(1)
+
+    static_plot <- ggplot() +
       geom_path(data = track_data(), aes(x = x2, y = y2, group = 1),
                 linewidth = 8, color = "white") +
       geom_point(data = start_coord, aes(x = x2, y = y2),
@@ -224,13 +272,22 @@ server <- function(input, output, session) {
       geom_point(data = plot_data(), aes(x = x, y = y, group = driver, color = driver),
                  size = 3) +
       theme_track() +
-      labs(x = NULL, y = NULL)
-      # TODO add in reactive title/caption based on the inputs
+      labs(title = paste(input$driver_1, "vs.", input$driver_2, "Qualifying Lap"),
+           subtitle = paste(input$season_1, input$round_1),
+           x = NULL, y = NULL)
 
-    # TODO actual animation
+    # apply track correction
+    corrected_plot <- corrected_track(static_plot, plot_data())
 
-  })
+    animated_plot <- corrected_plot +
+      transition_reveal(along = time) +
+      ease_aes('linear')
 
-}
+    anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10)) # New
+
+    # Return a list containing the filename
+    list(src = "outfile.gif", contentType = 'image/gif')
+    }, deleteFile = TRUE)
+  }
 
 shinyApp(ui, server)
