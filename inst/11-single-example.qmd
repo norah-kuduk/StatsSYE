@@ -28,6 +28,34 @@ load_schedule(2024)
 get_session_drivers_and_teams(2024, 24, "Q")
 ```
 
+```{r}
+get_session_drivers_and_teams(2021, 15, "Q")
+```
+
+```{r}
+get_team_by_driver(
+  "TSU",
+  season = get_current_season(),
+  round = 1,
+  short = TRUE
+)
+```
+
+```{r}
+driver1_team <- tolower(get_team_by_driver("NOR", season = 2024, round = 1, short = TRUE))
+driver2_team <- tolower(get_team_by_driver("VER", season = 2024, round = 1, short = TRUE))
+
+driver1_color <- constructor_color(driver1_team)
+driver2_color <- constructor_color(driver2_team)
+
+setNames(c(driver1_color, driver2_color), c(input$driver_1, input$driver_2))
+```
+
+```{r}
+
+```
+
+
 
 Plotting Abu Dhabi 2024
 

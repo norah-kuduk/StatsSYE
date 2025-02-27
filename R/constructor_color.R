@@ -8,12 +8,16 @@ constructor_color <- function(constructor_input) {
   TEAM_COLORS <- c('alpine' = '#ff87bc', 'aston martin' = '#00665f', 'ferrari' = '#e8002d',
                    'haas' = '#b6babd', 'mclaren' = '#ff8000', 'mercedes' = '#27f4d2',
                    'rb' = '#364aa9', 'red bull' = '#0600ef', 'sauber' = '#00e700',
-                   'williams' = '#00a0dd')
+                   'williams' = '#00a0dd', 'renault' = '#ffd700', 'racing point' = '#f596c8',
+                   'alpha tauri' = '#2b4562', 'torro rosso' = '#0032ff', 'force india' = '#ff80c7',
+                   'alfa romeo' = '#900000')
 
   TEAM_ABBR <- c('AMR' = 'aston martin', 'APN' = 'alpine', 'FER' = 'ferrari',
                  'HAA' = 'haas', 'MCL' = 'mclaren', 'MER' = 'mercedes',
                  'RB' = 'rb', 'RBR' = 'red bull', 'SAU' = 'sauber',
-                 'WIL' = 'williams')
+                 'WIL' = 'williams', 'REN' = 'renault', 'RP' = 'racing point',
+                 'AT' = 'alpha tauri', 'TR' = 'torro rosso', 'FI' = 'force india',
+                 'ALF' = 'alfa romeo')
 
   team_colors_df <- data.frame(team_name = names(TEAM_COLORS), color = TEAM_COLORS, stringsAsFactors = FALSE)
   team_abbr_df <- data.frame(team_abbr = names(TEAM_ABBR), team_name = TEAM_ABBR, stringsAsFactors = FALSE)
