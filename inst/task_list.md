@@ -1,5 +1,14 @@
 ## Task List
 
+## For March 6
+
+1. Get the speed part working on app.
+
+2. Work on first tab to add some more info (see `reactable` package). Adding some info about how the race turned out.
+
+3. Get started on the same driver - two seasons tab.
+
+
 ## For February 27
 
 1. Continue working on the app, looking at the inputs to update reactively when the button is clicked.
