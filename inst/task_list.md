@@ -1,5 +1,13 @@
 ## Task List
 
+## For March 13
+
+1. Fix the issue with `round_1`.
+
+2. Update plot to lollipop plot.
+
+3. Start working on other tab.
+
 ## For March 6
 
 1. Get the speed part working on app.
