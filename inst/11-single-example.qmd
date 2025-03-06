@@ -3,9 +3,10 @@ library(f1dataR)
 library(f1animateR)
 library(tidyverse)
 library(gganimate)
+library(knitr)
 ```
 
-App Testing 
+### Various App Testing 
 
 ```{r}
 data <- get_session_drivers_and_teams(2024, 24, "Q") |> mutate(driver_code = abbreviation)
@@ -42,6 +43,17 @@ get_team_by_driver(
 ```
 
 ```{r}
+results <- load_results(season = "current", round = "last")
+
+drivers <- load_drivers(season = 2024)
+```
+
+```{r}
+inner_join(results, drivers, by = "driver_id")
+```
+
+
+```{r}
 driver1_team <- tolower(get_team_by_driver("NOR", season = 2024, round = 1, short = TRUE))
 driver2_team <- tolower(get_team_by_driver("VER", season = 2024, round = 1, short = TRUE))
 
@@ -52,12 +64,18 @@ setNames(c(driver1_color, driver2_color), c(input$driver_1, input$driver_2))
 ```
 
 ```{r}
+full_results <- load_results(2024, 1)
 
+driver_data <- load_drivers(2024)
+
+data <- inner_join(full_results, driver_data, by = "driver_id")
+
+data <- data |> filter(code == "VER" | code == "NOR") |> select(code, constructor_id, grid, position)
+kable(data)
 ```
 
 
-
-Plotting Abu Dhabi 2024
+### Plotting Abu Dhabi 2024
 
 Lando Norris Pole 1:22.595
 

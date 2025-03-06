@@ -7,6 +7,8 @@ library(f1animateR)
 library(knitr)
 library(kableExtra)
 library(gganimate)
+library(reactable)
+library(ggrepel)
 
 ## setup_fastf1()
 use_virtualenv("f1dataR_env")
@@ -43,7 +45,9 @@ ui <- fluidPage(
                ),
 
                mainPanel(
-                 tableOutput("quali_comparison")
+                 reactableOutput("quali_comparison"),
+                 plotOutput("tire_degradation_plot"),
+                 tableOutput("quali_race_table")
                )
              )),
 
@@ -110,14 +114,23 @@ server <- function(input, output, session) {
 
   # fetch qualifying drivers/teams
   quali_data_1 <- reactive({
+    # browser()
     get_session_drivers_and_teams(input$season_1, input$round_1, "Q") |>
       mutate(driver_code = abbreviation) |>
       select(-abbreviation)
   })
 
+  quali_race_results <- reactive({
+    full_results2 <- load_results(input$season_1, input$round_1)
+    driver_data <- load_drivers(input$season_1)
+
+    inner_join(full_results2, driver_data, by = "driver_id")
+  })
+
   #### Comparison Panel ####
 
   output$round_select <- renderUI({
+    # browser()
     data <- schedule_data()
     selectInput("round_1", "Select Round: ", choices = data$race_name)
   })
@@ -138,9 +151,10 @@ server <- function(input, output, session) {
   # TODO do the different year inputs and code
 
   # display comparison table (two drivers)
-  output$quali_comparison <- renderTable({
+  output$quali_comparison <- renderReactable({
     if (input$compare_mode == "same_session") {
       req(input$driver_1, input$driver_2)
+
       data <- quali_data_1()
       req(data)
 
@@ -152,14 +166,52 @@ server <- function(input, output, session) {
         filter(lap_time > 0) |>
         select(driver, lap_time, lap_number, compound)
 
-    } else {
-      # TODO when compare mode is diff_seasons
-      data <- quali_data_1()
+      reactable(
+        quali_laps,
+        striped = TRUE,           # Alternating row colors
+        highlight = TRUE,         # Highlight row on hover
+        bordered = TRUE,          # Add borders
+        defaultPageSize = 10,     # Show 10 rows per page
+        searchable = TRUE,        # Enable search
+        columns = list(
+          driver = colDef(name = "Driver", align = "left"),
+          lap_time = colDef(name = "Lap Time", align = "center"),
+          lap_number = colDef(name = "Lap Number", align = "center"),
+          compound = colDef(name = "Tire Compound", align = "center")
+        )
+      )
     }
+  })
 
-    kable(quali_laps, format = "html") |>
-      kable_styling("striped", full_width = FALSE)
-  }, sanitize.text.function = function(x) x)
+  output$tire_degradation_plot <- renderPlot({
+    req(input$driver_1, input$driver_2)
+
+    quali_laps <- fetch_quali_data(input$season_1, input$round_1) |>
+      filter(driver == input$driver_1 | driver == input$driver_2) |>
+      filter(lap_time > 0) |>
+      select(driver, lap_time, lap_number, compound)
+
+    # TODO change to a lollipop plot?
+    ggplot(quali_laps, aes(x = lap_number, y = lap_time)) +
+      geom_point(size = 3, alpha = 0.7, aes(shape = driver, color = compound)) +
+      geom_label_repel(aes(label=lap_time)) +
+      scale_color_manual(values = c("SOFT" = "red", "MEDIUM" = "gold", "HARD" = "white", "WET" = "blue", "INTERMEDIATE" = "green")) +
+      labs(
+        title = "Tire Performance Degradation",
+        x = "Lap Number",
+        y = "Lap Time (seconds)",
+        color = "Tire Compound"
+      ) +
+      theme_minimal()
+  })
+
+  output$quali_race_table <- renderTable({
+    data <- quali_race_results()
+
+    data <- data |> filter(code == input$driver_1 | code == input$driver_2)
+    kable(data)
+  })
+
 
   #### Animation Panel ####
 
@@ -309,6 +361,7 @@ server <- function(input, output, session) {
     outfile <- tempfile(fileext='.gif')
 
     t_df <- track_data()
+    plot_data <- plot_data()
 
     start_coord <- t_df |> slice(1)
 
@@ -318,7 +371,7 @@ server <- function(input, output, session) {
     # https://stackoverflow.com/questions/58439944/how-to-use-your-own-image-for-geom-point-in-gganimate
 
     static_plot <- ggplot() +
-      geom_path(data = track_data(), aes(x = x2, y = y2, group = 1),
+      geom_path(data = t_df, aes(x = x2, y = y2, group = 1),
                 linewidth = 8, color = "white") +
       geom_point(data = start_coord, aes(x = x2, y = y2),
                  color = "black", shape = 18, size = 4) +
@@ -338,12 +391,11 @@ server <- function(input, output, session) {
       ease_aes('linear') +
       labs(
         caption = paste(
-          "Time: {sprintf('%.3f', frame_along)} s\n"
-          # TODO speed caption
+          "Time: {sprintf('%.3f', frame_along)} s\n",
+          input$driver_1, " Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_1] - frame_along))]} kph\n",
+          input$driver_2," Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_2] - frame_along))]} kph"
         )
       )
-
-
     anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10)) # New
 
     # return a list containing the filename
