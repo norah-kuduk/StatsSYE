@@ -74,6 +74,38 @@ data <- data |> filter(code == "VER" | code == "NOR") |> select(code, constructo
 kable(data)
 ```
 
+```{r}
+seasons <- 2018:2024
+    
+# Fetch and combine drivers from all seasons
+driver_data <- bind_rows(lapply(seasons, function(season) {
+  load_drivers(season = season) |>
+    mutate(season = season)
+    }))
+
+driver_data |> 
+  unite("Driver", c("given_name", "family_name"), sep = " ") |>
+  group_by(code) |> 
+  mutate(n_seasons = n()) |> 
+  filter(n_seasons > 1)
+```
+
+```{r}
+season_a <- 2018
+season_b <- 2023
+
+seasons <- c(season_a, season_b)
+
+race_data <- bind_rows(lapply(seasons, function(season) {
+  load_schedule(season = season)
+}))
+
+race_data |> group_by(race_name) |> 
+  mutate(num_races = n()) |> 
+  filter(num_races > 1) |>
+  distinct(race_name)
+```
+
 
 ### Plotting Abu Dhabi 2024
 

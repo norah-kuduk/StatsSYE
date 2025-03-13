@@ -21,5 +21,4 @@ smooth_speed <- function(data, grouping, frame_size = 16) {
     ungroup() |>
     # remove the temporary grouping variable
     select(-group)
-
 }

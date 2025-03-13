@@ -9,6 +9,7 @@ library(kableExtra)
 library(gganimate)
 library(reactable)
 library(ggrepel)
+library(tidyr)
 
 ## setup_fastf1()
 use_virtualenv("f1dataR_env")
@@ -37,17 +38,17 @@ ui <- fluidPage(
 
                  conditionalPanel(
                    condition = "input.compare_mode == 'diff_seasons'",
-                   selectInput("driver_same", "Select Driver:", choices = NULL),
-                   selectInput("season_a", "Select First Season:", choices = 2018:2024, selected = 2024),
-                   selectInput("season_b", "Select Second Season:", choices = 2018:2024, selected = 2023),
-                   uiOutput("round_ui")
+                   uiOutput("driver_same"),
+                   uiOutput("season_a"),
+                   uiOutput("season_b"),
+                   uiOutput("round_overlap")
                  )
                ),
 
                mainPanel(
                  reactableOutput("quali_comparison"),
-                 plotOutput("tire_degradation_plot"),
-                 tableOutput("quali_race_table")
+                 tableOutput("quali_race_table"),
+                 plotOutput("tire_degradation_plot")
                )
              )),
 
@@ -74,15 +75,15 @@ ui <- fluidPage(
 
                  conditionalPanel(
                    condition = "input.anim_compare_mode == 'diff_seasons'",
-                   selectInput("driver_same", "Select Driver:", choices = NULL),
-                   selectInput("season_a", "Select First Season:", choices = 2018:2024, selected = 2024),
-                   selectInput("season_b", "Select Second Season:", choices = 2018:2024, selected = 2023),
-                   uiOutput("round_ui"),
+                   uiOutput("driver_same"),
+                   uiOutput("season_a"),
+                   uiOutput("season_b"),
+                   uiOutput("round_overlap"),
                    actionButton("animate_btn", "Animate Qualifying"),
                    actionButton("stop_btn", "Clear Animation")
                  )
-
                ),
+
                mainPanel(
                  plotOutput("animation_output")
                )
@@ -120,18 +121,80 @@ server <- function(input, output, session) {
       select(-abbreviation)
   })
 
+  quali_data_diff_seasons <- reactive({
+    year_1 <- get_session_drivers_and_teams(input$season_a, input$round_constant, "Q") |>
+      mutate(driver_code = abbreviation) |>
+      select(-abbreviation)
+
+    year_2 <- get_session_drivers_and_teams(input$season_b, input$round_constant, "Q") |>
+      mutate(driver_code = abbreviation) |>
+      select(-abbreviation)
+
+    bind_rows(year_1, year_2)
+  })
+
+  # get quali and race results for comparison
   quali_race_results <- reactive({
-    full_results2 <- load_results(input$season_1, input$round_1)
+    schedule <- schedule_data()
+    round_num <- schedule |>
+      filter(race_name == input$round_1) |>
+      mutate(round = as.integer(round)) |>
+      pull(round)
+
+    full_results2 <- load_results(input$season_1, round_num)
     driver_data <- load_drivers(input$season_1)
 
     inner_join(full_results2, driver_data, by = "driver_id")
   })
 
+  # get all drivers from 2018 to 2024 that drove in more than 1 season
+  all_drivers <- reactive({
+    seasons <- 2018:2024
+
+    # Fetch and combine drivers from all seasons
+    driver_data <- bind_rows(lapply(seasons, function(season) {
+      load_drivers(season = season) |>
+        mutate(season = season)
+    }))
+
+    driver_data |>
+      unite("Driver", c("given_name", "family_name"), sep = " ") |>
+      group_by(code) |>
+      mutate(n_seasons = n()) |>
+      filter(n_seasons > 1)
+  })
+
+  # get all seasons that a driver participated in (2018 to 2024)
+  valid_seasons <- reactive({
+    driver_data <- all_drivers()
+
+    driver_data |> filter(code == input$driver_same) |> pull(season)
+  })
+
+  # find races that only existed in those two seasons (has to be by name)
+  round_overlap <- reactive({
+    season_a <- input$season_a
+    season_b <- input$season_b
+
+    seasons <- c(season_a, season_b)
+
+    race_data <- bind_rows(lapply(seasons, function(season) {
+      load_schedule(season = season)
+    }))
+
+    race_data |> group_by(race_name) |>
+      mutate(num_races = n()) |>
+      filter(num_races > 1) |>
+      distinct(race_name)
+  })
+
   #### Comparison Panel ####
 
+  ###### SAME SESSION LOADING ######
   output$round_select <- renderUI({
-    # browser()
     data <- schedule_data()
+    data <- data |> mutate(round = as.integer(round))
+
     selectInput("round_1", "Select Round: ", choices = data$race_name)
   })
 
@@ -139,16 +202,42 @@ server <- function(input, output, session) {
   output$driver_select_1 <- renderUI({
     data <- quali_data_1()
     driver_choices <- setNames(data$driver_code, data$name)
-    selectInput("driver_1", "Select Driver 1:", choices = driver_choices)
+    selectInput("driver_1", "Select Driver 1: ", choices = driver_choices)
   })
 
   output$driver_select_2 <- renderUI({
     data <- quali_data_1()
     driver_choices <- setNames(data$driver_code, data$name)
-    selectInput("driver_2", "Select Driver 2:", choices = driver_choices)
+    selectInput("driver_2", "Select Driver 2: ", choices = driver_choices)
   })
 
-  # TODO do the different year inputs and code
+  ###### SAME DRIVER LOADING ######
+
+  output$driver_same <- renderUI({
+    driver_data <- all_drivers()
+    driver_choices <- setNames(driver_data$code, driver_data$Driver)
+    selectInput("driver_same", "Select Driver: ", choices = driver_choices)
+  })
+
+  output$season_a <- renderUI({
+    data <- valid_seasons()
+
+    selectInput("season_a", "Select First Season: ", choices = data)
+  })
+
+  output$season_b <- renderUI({
+    data <- valid_seasons()
+
+    selectInput("season_b", "Select Second Season: ", choices = data)
+  })
+
+    output$round_overlap <- renderUI({
+    data <- round_overlap()
+
+    selectInput("round_constant", "Select Round: ", choices = data$race_name)
+  })
+
+  ##### Output Tables #####
 
   # display comparison table (two drivers)
   output$quali_comparison <- renderReactable({
@@ -168,11 +257,11 @@ server <- function(input, output, session) {
 
       reactable(
         quali_laps,
-        striped = TRUE,           # Alternating row colors
-        highlight = TRUE,         # Highlight row on hover
-        bordered = TRUE,          # Add borders
-        defaultPageSize = 10,     # Show 10 rows per page
-        searchable = TRUE,        # Enable search
+        striped = TRUE,
+        highlight = TRUE,
+        bordered = TRUE,
+        defaultPageSize = 10,
+        searchable = TRUE,
         columns = list(
           driver = colDef(name = "Driver", align = "left"),
           lap_time = colDef(name = "Lap Time", align = "center"),
@@ -180,37 +269,96 @@ server <- function(input, output, session) {
           compound = colDef(name = "Tire Compound", align = "center")
         )
       )
+    } else {
+      req(input$driver_same, input$season_a, input$season_b, input$round_constant)
+
+      data <- quali_data_diff_seasons()
+
+      comparison <- data |> filter(driver_code == input$driver_same)
+
+      quali_laps_a <- fetch_quali_data(input$season_a, input$round_constant) |>
+        filter(driver == input$driver_same) |>
+        filter(lap_time > 0) |>
+        select(driver, lap_time, lap_number, compound) |>
+        mutate(season = input$season_a)
+
+      quali_laps_b <- fetch_quali_data(input$season_b, input$round_constant) |>
+        filter(driver == input$driver_same) |>
+        filter(lap_time > 0) |>
+        select(driver, lap_time, lap_number, compound) |>
+        mutate(season = input$season_b)
+
+      data <- bind_rows(quali_laps_a, quali_laps_b)
+
+      reactable(
+        data,
+        striped = TRUE,
+        highlight = TRUE,
+        bordered = TRUE,
+        defaultPageSize = 10,
+        searchable = TRUE,
+        columns = list(
+          driver = colDef(name = "Driver", align = "left"),
+          lap_time = colDef(name = "Lap Time", align = "center"),
+          lap_number = colDef(name = "Lap Number", align = "center"),
+          compound = colDef(name = "Tire Compound", align = "center"),
+          season = colDef(name = "Season", align = "center")
+        )
+      )
     }
   })
 
   output$tire_degradation_plot <- renderPlot({
-    req(input$driver_1, input$driver_2)
+    if (input$compare_mode == "same_session") {
 
-    quali_laps <- fetch_quali_data(input$season_1, input$round_1) |>
-      filter(driver == input$driver_1 | driver == input$driver_2) |>
-      filter(lap_time > 0) |>
-      select(driver, lap_time, lap_number, compound)
+      req(input$driver_1, input$driver_2)
 
-    # TODO change to a lollipop plot?
-    ggplot(quali_laps, aes(x = lap_number, y = lap_time)) +
-      geom_point(size = 3, alpha = 0.7, aes(shape = driver, color = compound)) +
-      geom_label_repel(aes(label=lap_time)) +
-      scale_color_manual(values = c("SOFT" = "red", "MEDIUM" = "gold", "HARD" = "white", "WET" = "blue", "INTERMEDIATE" = "green")) +
-      labs(
-        title = "Tire Performance Degradation",
-        x = "Lap Number",
-        y = "Lap Time (seconds)",
-        color = "Tire Compound"
-      ) +
-      theme_minimal()
-  })
+      quali_laps <- fetch_quali_data(input$season_1, input$round_1) |>
+        filter(driver == input$driver_1 | driver == input$driver_2) |>
+        filter(lap_time > 0) |>
+        select(driver, lap_time, lap_number, compound) |>
+        arrange(lap_time) |>
+        mutate(index = row_number())
+
+
+      ggplot(quali_laps, aes(x = index, y = lap_time)) +
+        geom_segment(aes(x = index, xend = index, y = 0, yend = lap_time, color = compound, linetype = driver)) +
+        geom_point(size = 4, aes(color = compound), alpha = 0.7) +
+        geom_label(aes(label = lap_time), nudge_x = 0.2) +
+        scale_color_manual(values = c("SOFT" = "red", "MEDIUM" = "gold", "HARD" = "white", "WET" = "blue", "INTERMEDIATE" = "green",
+                                      "HYPERSOFT" = "lightpink", "ULTRASOFT" = "purple", "SUPERSOFT" = "tomato", "SUPERHARD" = "orange")) +
+        coord_flip() +
+        labs(
+          title = "Tire Performance Degradation",
+          y = "Lap Time (seconds)",
+          color = "Tire Compound",
+          linetype = "Driver"
+        ) +
+        theme_minimal() +
+        theme(legend.position = "top", axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+
+    } else {
+
+    }
+    }, height = 600, width = 600)
 
   output$quali_race_table <- renderTable({
-    data <- quali_race_results()
+    if (input$compare_mode == "same_session") {
 
-    data <- data |> filter(code == input$driver_1 | code == input$driver_2)
-    kable(data)
-  })
+      # browser()
+      data <- quali_race_results()
+
+      data <- data |> filter(code == input$driver_1 | code == input$driver_2) |>
+        unite("driver", c(given_name, family_name), sep = " ") |>
+        rename("Driver" = driver, "Team" = constructor_id, "Quali Position" = grid, "Race Position" = position) |>
+        select(Driver, Team, `Quali Position`, `Race Position`)
+
+      kable(data, format = "html") |> kable_styling("striped", full_width = FALSE)
+
+    } else {
+
+    }
+  }, sanitize.text.function = function(x) x)
 
 
   #### Animation Panel ####
