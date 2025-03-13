@@ -1,5 +1,13 @@
 ## Task List
 
+## For March 27
+
+1. Fix the UI issue.
+
+2. Update plot to lollipop plot.
+
+3. Testing the new tab with comparing years from the same driver.
+
 ## For March 13
 
 1. Fix the issue with `round_1`.
