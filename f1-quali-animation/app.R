@@ -10,11 +10,24 @@ library(gganimate)
 library(reactable)
 library(ggrepel)
 library(tidyr)
+library(bslib)
+library(reactablefmtr)
 
 ## setup_fastf1()
 use_virtualenv("f1dataR_env")
 
+# custom theme
+f1_theme <- bs_theme(
+  bootswatch = "darkly",  # dark theme base
+  bg = "#1C1C1C",          # background color
+  fg = "#ffffff",           # default text color
+  primary = "#aa1a0a",    # red highlight color (matches plot title)
+  secondary = "#ffffff",    # secondary text color
+  code_font = font_google("Fira Code")
+)
+
 ui <- fluidPage(
+  theme = f1_theme,
 
   titlePanel("F1 Qualifying Analysis"),
 
@@ -75,10 +88,10 @@ ui <- fluidPage(
 
                  conditionalPanel(
                    condition = "input.anim_compare_mode == 'diff_seasons'",
-                   uiOutput("driver_same"),
-                   uiOutput("season_a"),
-                   uiOutput("season_b"),
-                   uiOutput("round_overlap"),
+                   uiOutput("anim_driver_same"),
+                   uiOutput("anim_season_a"),
+                   uiOutput("anim_season_b"),
+                   uiOutput("anim_round_overlap"),
                    actionButton("animate_btn", "Animate Qualifying"),
                    actionButton("stop_btn", "Clear Animation")
                  )
@@ -262,6 +275,7 @@ server <- function(input, output, session) {
         bordered = TRUE,
         defaultPageSize = 10,
         searchable = TRUE,
+        theme = darkly(),
         columns = list(
           driver = colDef(name = "Driver", align = "left"),
           lap_time = colDef(name = "Lap Time", align = "center"),
@@ -309,6 +323,7 @@ server <- function(input, output, session) {
   })
 
   output$tire_degradation_plot <- renderPlot({
+    # TODO flip so fastest is first
     if (input$compare_mode == "same_session") {
 
       req(input$driver_1, input$driver_2)
@@ -324,7 +339,7 @@ server <- function(input, output, session) {
       ggplot(quali_laps, aes(x = index, y = lap_time)) +
         geom_segment(aes(x = index, xend = index, y = 0, yend = lap_time, color = compound, linetype = driver)) +
         geom_point(size = 4, aes(color = compound), alpha = 0.7) +
-        geom_label(aes(label = lap_time), nudge_x = 0.2) +
+        geom_label(aes(label = lap_number), nudge_x = 0.2) +
         scale_color_manual(values = c("SOFT" = "red", "MEDIUM" = "gold", "HARD" = "white", "WET" = "blue", "INTERMEDIATE" = "green",
                                       "HYPERSOFT" = "lightpink", "ULTRASOFT" = "purple", "SUPERSOFT" = "tomato", "SUPERHARD" = "orange")) +
         coord_flip() +
@@ -334,7 +349,7 @@ server <- function(input, output, session) {
           color = "Tire Compound",
           linetype = "Driver"
         ) +
-        theme_minimal() +
+        theme_track() +
         theme(legend.position = "top", axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
 
     } else {
@@ -377,6 +392,8 @@ server <- function(input, output, session) {
       updateSelectInput(session, "anim_season_1", selected = input$season_1)
     }
   })
+
+  ##### SAME SESSION #####
 
   # Define reactive variables for the schedule and qualifying data
   anim_schedule_data <- reactive({
@@ -433,47 +450,108 @@ server <- function(input, output, session) {
     }
   })
 
+  ##### SAME DRIVER #####
+
+  output$anim_driver_same <- renderUI({
+    driver_data <- all_drivers()
+    driver_choices <- setNames(driver_data$code, driver_data$Driver)
+    selectInput("driver_same", "Select Driver: ", choices = driver_choices)
+  })
+
+  output$anim_season_a <- renderUI({
+    data <- valid_seasons()
+
+    selectInput("season_a", "Select First Season: ", choices = data)
+  })
+
+  output$anim_season_b <- renderUI({
+    data <- valid_seasons()
+
+    selectInput("season_b", "Select Second Season: ", choices = data)
+  })
+
+  output$anim_round_overlap <- renderUI({
+    data <- round_overlap()
+
+    selectInput("round_constant", "Select Round: ", choices = data$race_name)
+  })
+
   # reactive variable to store telemetry data
   plot_data <- reactiveVal(NULL)
   track_data <- reactiveVal(NULL)
   animation_running <- reactiveVal(FALSE)
 
+  ##### Output #####
 
   # animate button clicked
   observeEvent(input$animate_btn, {
-    animation_running(TRUE)
+    if (input$anim_compare_mode == "same_session") {
+      animation_running(TRUE)
 
-    # fetch telemetry data
-    req(input$driver_1, input$driver_2, input$season_1, input$round_1)
+      # fetch telemetry data
+      req(input$driver_1, input$driver_2, input$season_1, input$round_1)
 
-    driver1_data <- get_quali_telemetry(laps = "fastest", season = input$season_1, round = input$round_1, driver = input$driver_1, verbose = TRUE)
-    driver2_data <- get_quali_telemetry(laps = "fastest", season = input$season_1, round = input$round_1, driver = input$driver_2, verbose = TRUE)
+      driver1_data <- get_quali_telemetry(laps = "fastest", season = input$season_1, round = input$round_1, driver = input$driver_1, verbose = TRUE)
+      driver2_data <- get_quali_telemetry(laps = "fastest", season = input$season_1, round = input$round_1, driver = input$driver_2, verbose = TRUE)
 
-    # smooth the track data
-    track_data(smooth_track(driver1_data))
+      # smooth the track data
+      track_data(smooth_track(driver1_data))
 
-    # assign driver labels
-    driver1_data <- driver1_data |> mutate(driver = input$driver_1)
-    driver2_data <- driver2_data |> mutate(driver = input$driver_2)
+      # assign driver labels
+      driver1_data <- driver1_data |> mutate(driver = input$driver_1)
+      driver2_data <- driver2_data |> mutate(driver = input$driver_2)
 
-    # combine telemetry data
-    combined_data <- bind_data_driver(driver1_data, driver2_data, drivers = c(input$driver_1, input$driver_2))
+      # combine telemetry data
+      combined_data <- bind_data_driver(driver1_data, driver2_data, drivers = c(input$driver_1, input$driver_2))
 
-    # smooth speed values
-    # TODO sliding scale for the smoothing
+      # smooth speed values
+      # TODO sliding scale for the smoothing
 
-    combined_data <- combined_data |>
-      group_by(driver) |>
-      mutate(group = ceiling(row_number() / 16)) |>
-      group_by(group) |>
-      mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
-      ungroup() |>
-      select(-group)
+      combined_data <- combined_data |>
+        group_by(driver) |>
+        mutate(group = ceiling(row_number() / 16)) |>
+        group_by(group) |>
+        mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
+        ungroup() |>
+        select(-group)
 
 
-    # only proceed if animation is still running
-    if (animation_running()) {
-      plot_data(combined_data)
+      # only proceed if animation is still running
+      if (animation_running()) {
+        plot_data(combined_data)
+      }
+    } else {
+      animation_running(TRUE)
+
+      # fetch telemetry data
+      req(input$driver_same, input$season_a, input$season_b, input$round_constant)
+
+      driver_seasona_data <- get_quali_telemetry(laps = "fastest", season = input$season_a, round = input$round_constant, driver = input$driver_1, verbose = TRUE)
+      driver_seasonb_data <- get_quali_telemetry(laps = "fastest", season = input$season_b, round = input$round_constant, driver = input$driver_1, verbose = TRUE)
+
+      # smooth the track data
+      track_data(smooth_track(driver_seasona_data))
+
+      # assign season labels
+      driver_seasona_data <- driver_seasona_data |> mutate(season = input$season_a)
+      driver_seasonb_data <- driver_seasonb_data |> mutate(season = input$season_b)
+
+      # combine telemetry data
+      combined_data <- bind_rows(driver_seasona_data, driver_seasonb_data) |> mutate(season = as.factor(season))
+
+      # smooth speed values (same as before)
+      combined_data <- combined_data |>
+        group_by(season) |>
+        mutate(group = ceiling(row_number() / 16)) |>
+        group_by(group) |>
+        mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
+        ungroup() |>
+        select(-group)
+
+      # only proceed if animation is still running
+      if (animation_running()) {
+        plot_data(combined_data)
+      }
     }
   })
 
@@ -505,49 +583,98 @@ server <- function(input, output, session) {
 
   # generate animated plot
   output$animation_output <- renderImage({
-    req(plot_data(), track_data(), animation_running())  # Ensure animation is running
-    outfile <- tempfile(fileext='.gif')
+    req(input$anim_compare_mode)
 
-    t_df <- track_data()
-    plot_data <- plot_data()
+    if (input$anim_compare_mode == "same_session") {
+      req(plot_data(), track_data(), animation_running())  # Ensure animation is running
+      outfile <- tempfile(fileext='.gif')
 
-    start_coord <- t_df |> slice(1)
+      t_df <- track_data()
+      plot_data <- plot_data()
 
-    driver_colors <- driver_colors()
+      start_coord <- t_df |> slice(1)
 
-    ## TODO link for later
-    # https://stackoverflow.com/questions/58439944/how-to-use-your-own-image-for-geom-point-in-gganimate
+      driver_colors <- driver_colors()
 
-    static_plot <- ggplot() +
-      geom_path(data = t_df, aes(x = x2, y = y2, group = 1),
-                linewidth = 8, color = "white") +
-      geom_point(data = start_coord, aes(x = x2, y = y2),
-                 color = "black", shape = 18, size = 4) +
-      geom_point(data = plot_data(), aes(x = x, y = y, group = driver, color = driver),
-                 size = 3) +
-      scale_color_manual(values = driver_colors) +
-      theme_track() +
-      labs(title = paste(input$driver_1, "vs.", input$driver_2, "Qualifying Lap"),
-           subtitle = paste(input$season_1, input$round_1),
-           x = NULL, y = NULL)
+      ## TODO link for later
+      # https://stackoverflow.com/questions/58439944/how-to-use-your-own-image-for-geom-point-in-gganimate
 
-    # apply track correction
-    corrected_plot <- corrected_track(static_plot, plot_data())
+      static_plot <- ggplot() +
+        geom_path(data = t_df, aes(x = x2, y = y2, group = 1),
+                  linewidth = 8, color = "white") +
+        geom_point(data = start_coord, aes(x = x2, y = y2),
+                   color = "black", shape = 18, size = 4) +
+        geom_point(data = plot_data(), aes(x = x, y = y, group = driver, color = driver),
+                   size = 3) +
+        scale_color_manual(values = driver_colors) +
+        theme_track() +
+        labs(title = paste(input$driver_1, "vs.", input$driver_2, "Qualifying Lap"),
+             subtitle = paste(input$season_1, input$round_1),
+             x = NULL, y = NULL)
 
-    animated_plot <- corrected_plot +
-      transition_reveal(along = time) +
-      ease_aes('linear') +
-      labs(
-        caption = paste(
-          "Time: {sprintf('%.3f', frame_along)} s\n",
-          input$driver_1, " Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_1] - frame_along))]} kph\n",
-          input$driver_2," Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_2] - frame_along))]} kph"
+      # apply track correction
+      corrected_plot <- corrected_track(static_plot, plot_data())
+
+      animated_plot <- corrected_plot +
+        transition_reveal(along = time) +
+        ease_aes('linear') +
+        labs(
+          caption = paste(
+            "Time: {sprintf('%.3f', frame_along)} s\n",
+            input$driver_1, " Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_1] - frame_along))]} kph\n",
+            input$driver_2," Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_2] - frame_along))]} kph"
+          )
         )
-      )
-    anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10)) # New
+      anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10))
+    }
+
+
+    if (input$anim_compare_mode == "diff_seasons") {
+        req(plot_data(), track_data(), animation_running())  # Ensure animation is running
+
+
+        outfile <- tempfile(fileext='.gif')
+
+        t_df <- track_data()
+        plot_data <- plot_data()
+
+        start_coord <- t_df |> slice(1)
+
+
+        ## TODO link for later
+        # https://stackoverflow.com/questions/58439944/how-to-use-your-own-image-for-geom-point-in-gganimate
+
+        static_plot <- ggplot() +
+          geom_path(data = t_df, aes(x = x2, y = y2, group = 1),
+                    linewidth = 8, color = "white") +
+          geom_point(data = start_coord, aes(x = x2, y = y2),
+                     color = "black", shape = 18, size = 4) +
+          geom_point(data = plot_data(), aes(x = x, y = y, group = season, color = season),
+                     size = 3) +
+          theme_track() +
+          labs(title = paste(input$season_a, "vs.", input$season_b, "Qualifying Lap"),
+               subtitle = paste(input$driver_same, input$round_constant),
+               x = NULL, y = NULL)
+
+        # apply track correction
+        corrected_plot <- corrected_track(static_plot, plot_data())
+
+        animated_plot <- corrected_plot +
+          transition_reveal(along = time) +
+          ease_aes('linear') +
+          labs(
+            caption = paste(
+              "Time: {sprintf('%.3f', frame_along)} s\n",
+              input$season_a, " Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$season == input$season_a] - frame_along))]} kph\n",
+              input$season_b," Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$season == input$season_b] - frame_along))]} kph"
+            )
+          )
+        anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10))
+    }
 
     # return a list containing the filename
     list(src = "outfile.gif", contentType = 'image/gif')
+
     }, deleteFile = TRUE)
   }
 
