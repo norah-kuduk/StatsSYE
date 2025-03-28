@@ -1,5 +1,15 @@
 ## Task List
 
+## For April 3
+
+1. Fixing the smaller details (color scheme, lollipop ordering, etc.).
+
+2. Try to publish it to shiny apps .io (see if you get an error).
+
+3. Speed smoothing.
+
+4. Extra tab with instructions.
+
 ## For March 27
 
 1. Fix the UI issue.
