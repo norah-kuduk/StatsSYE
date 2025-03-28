@@ -11,7 +11,7 @@ theme_track <- function() {
       axis.title = ggplot2::element_text(colour = "white"),
       plot.title = ggplot2::element_text(face = "bold", size = 18, color = "#aa1a0a"),
       plot.subtitle = ggplot2::element_text(face = "bold", size = 16),
-      plot.background = ggplot2::element_rect(fill = "grey10"),
+      plot.background = ggplot2::element_rect(fill = "#1c1c1c"),
       panel.background = ggplot2::element_blank(),
       legend.background = ggplot2::element_blank(),
       legend.key = ggplot2::element_blank(),
