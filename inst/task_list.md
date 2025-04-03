@@ -1,5 +1,15 @@
 ## Task List
 
+## For April 10
+
+1. Complete abstract.
+
+2. Start Poster. Hailey: https://github.com/hquin20/SYE/blob/main/poster/poster.Rmd
+
+Lily: https://github.com/lilykasperek/SYE_2024_LK/blob/main/posterdown.Rmd
+
+3. Fix issue with shinyapps.io
+
 ## For April 3
 
 1. Fixing the smaller details (color scheme, lollipop ordering, etc.).
