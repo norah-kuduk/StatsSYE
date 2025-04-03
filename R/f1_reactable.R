@@ -1,6 +1,6 @@
 #' f1 inspired reactable theme
 #'
-#' Bootstrap-inspired darkly theme
+#' adjusted version of the Bootstrap-inspired darkly theme
 #'
 #' @param font_size Numeric value representing the size of the font within the table (in px).
 #'      Default is 14.
@@ -65,8 +65,8 @@ f1_reactable <- function(font_size = 14,
     backgroundColor = background_color,
     borderColor = "#222222",
     borderWidth = "1px",
-    stripedColor = "#adb5bd",
-    highlightColor = "#adb5bd",
+    stripedColor = "#363636",
+    highlightColor = "#8f8f8f",
     cellPadding = cell_padding,
     tableStyle = list(fontSize = font_size),
     headerStyle = list(
@@ -85,7 +85,7 @@ f1_reactable <- function(font_size = 14,
         fontWeight = "bold",
         transitionDuration = "1s",
         transitionTimingFunction = "ease-out",
-        color = "#afbdcc"
+        color = "#8f8f8f"
       )
     ),
     searchInputStyle = list(

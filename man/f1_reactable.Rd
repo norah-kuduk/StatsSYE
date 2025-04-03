@@ -40,7 +40,7 @@ Default is FALSE.}
 an object of class theme that is applied to a reactable table.
 }
 \description{
-Bootstrap-inspired darkly theme
+adjusted version of the Bootstrap-inspired darkly theme
 }
 \examples{
 data <- iris[10:29, ]

@@ -106,6 +106,28 @@ race_data |> group_by(race_name) |>
   distinct(race_name)
 ```
 
+```{r}
+schedule_a <- load_schedule(2022)
+schedule_b <- load_schedule(2024)
+schedule <- bind_rows(schedule_a, schedule_b)
+```
+
+```{r}
+round_num <- schedule |>
+      filter(race_name == "Monaco Grand Prix") |>
+      mutate(round = as.integer(round)) |> 
+      pull(round)
+
+list(round_num)
+```
+
+```{r}
+full_results_a <- load_results(2022, round_num[0])
+full_results_b <- load_results(2024, round_num[1])
+
+```
+
+
 
 ### Plotting Abu Dhabi 2024
 
@@ -175,6 +197,11 @@ plot_data |> group_by(driver) |>
 ```
 
 ```{r}
+smooth_speed(plot_data, driver, 4)
+```
+
+
+```{r}
 # Animate the lap with speed overlay
 animated_plot <- corrected_plot +
   transition_reveal(along = time) +
@@ -190,7 +217,6 @@ animated_plot <- corrected_plot +
 # Render animation
 animate(animated_plot, width = 700, height = 700, fps = 10)
 ```
-
 
 
 

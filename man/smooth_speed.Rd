@@ -4,14 +4,14 @@
 \alias{smooth_speed}
 \title{Smooth Speed Data}
 \usage{
-smooth_speed(data, grouping, frame_size = 16)
+smooth_speed(plot_data, grouping, frame_size = 16)
 }
 \arguments{
-\item{data}{A data frame containing at least a \code{speed} column.}
-
-\item{grouping}{A variable containing either \code{driver} or \code{year} to group speed by}
+\item{grouping}{A variable containing either \code{driver} or \code{season} to group speed by}
 
 \item{frame_size}{The number of data points per smoothing group (default: 16).}
+
+\item{data}{A data frame containing at least a \code{speed} column.}
 }
 \value{
 A data frame with a new \code{speed_smooth} column.

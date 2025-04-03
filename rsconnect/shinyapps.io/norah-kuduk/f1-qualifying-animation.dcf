@@ -1,0 +1,13 @@
+name: f1-qualifying-animation
+title: f1-qualifying-animation
+username: norah-kuduk
+account: norah-kuduk
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14416397
+bundleId: 10050437
+url: https://norah-kuduk.shinyapps.io/f1-qualifying-animation/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data/pokemon_full.csv|tests/testthat/test-add_nums.R|tests/testthat.R
