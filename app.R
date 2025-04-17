@@ -15,9 +15,29 @@ library(bslib)
 library(reactablefmtr)
 library(shinycssloaders)
 library(showtext)
+library(gifski)
+
 
 ## setup_fastf1()
-use_virtualenv("f1dataR_env")
+## devtools::install_github("https://github.com/norah-kuduk/StatsSYE”)
+## use_virtualenv("f1dataR_env")
+
+# Create and activate environment if it doesn't exist
+if (!virtualenv_exists("f1env")) {
+  virtualenv_create("f1env")
+  virtualenv_install("f1env", packages = c("fastf1"))
+}
+use_virtualenv("f1env", required = TRUE)
+
+# Set a cache directory that works in ShinyApps.io
+cache_dir <- file.path(tempdir(), "fastf1_cache")
+dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Enable FastF1 cache via reticulate
+fastf1 <- import("fastf1", delay_load = TRUE)
+fastf1$Cache$enable_cache(cache_dir)
+
+cat("FastF1 cache directory set to:", cache_dir, "\n")
 
 font <- font_link("Titillium Web",
                   href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700")
@@ -39,6 +59,9 @@ f1_theme <- bs_theme(
 options(spinner.image = "f1_loading.gif",
         spinner.image.width = "150px",
         spinner.image.height = "150px")
+
+font_add_google("Titillium Web", "titillium")
+showtext_auto()
 
 ui <- fluidPage(
   theme = f1_theme,
@@ -92,7 +115,7 @@ ui <- fluidPage(
                tags$a(href="https://cran.r-project.org/package=f1dataR", "f1dataR on CRAN", target="_blank")
              )
 
-             ),
+    ),
 
 
     #### Tab 2: Data Exploration ####
@@ -122,13 +145,13 @@ ui <- fluidPage(
 
                mainPanel(
                  withSpinner(
-                  reactableOutput("quali_comparison")
+                   reactableOutput("quali_comparison")
                  ),
                  withSpinner(
                    tableOutput("quali_race_table")
                  ),
                  withSpinner(
-                  plotOutput("tire_degradation_plot")
+                   plotOutput("tire_degradation_plot")
                  ),
                )
              )),
@@ -173,7 +196,7 @@ ui <- fluidPage(
 
                mainPanel(
                  withSpinner(
-                  plotOutput("animation_output")
+                   plotOutput("animation_output")
                  )
                )
              ))
@@ -219,10 +242,12 @@ server <- function(input, output, session) {
 
   # fetch schedule data for a given season
   schedule_data <- reactive({
+    req(input$season_1)
     load_schedule(input$season_1)
   })
 
   seasons_schedule_data <- reactive({
+    req(input$season_a, input$season_b)
     schedule_a <- load_schedule(input$season_a) |> mutate(season = input$season_a)
     schedule_b <- load_schedule(input$season_b) |> mutate(season = input$season_b)
     bind_rows(schedule_a, schedule_b)
@@ -231,12 +256,14 @@ server <- function(input, output, session) {
   # fetch qualifying drivers/teams
   quali_data_1 <- reactive({
     # browser()
+    req(input$season_1, input$round_1)
     get_session_drivers_and_teams(input$season_1, input$round_1, "Q") |>
       mutate(driver_code = abbreviation) |>
       select(-abbreviation)
   })
 
   quali_data_diff_seasons <- reactive({
+    req(input$season_a, input$season_b, input$round_constant, input$driver_same)
     year_1 <- get_session_drivers_and_teams(input$season_a, input$round_constant, "Q") |>
       mutate(driver_code = abbreviation) |>
       select(-abbreviation)
@@ -250,6 +277,7 @@ server <- function(input, output, session) {
 
   # get quali and race results for comparison
   quali_race_results <- reactive({
+    req(input$season_1, input$round_1, input$driver_1, input$driver_2)
     schedule <- schedule_data()
     round_num <- schedule |>
       filter(race_name == input$round_1) |>
@@ -264,6 +292,8 @@ server <- function(input, output, session) {
 
   # get quali and race results for comparison (diff seasons)
   seasons_quali_race_results <- reactive({
+    req(input$season_a, input$season_b, input$round_constant)
+
     schedule <- seasons_schedule_data()
 
     rounds <- schedule |>
@@ -308,6 +338,8 @@ server <- function(input, output, session) {
 
   # get all seasons that a driver participated in (2018 to 2024)
   valid_seasons <- reactive({
+    req(input$driver_same)
+
     driver_data <- all_drivers()
 
     driver_data |> filter(code == input$driver_same) |> pull(season)
@@ -315,6 +347,8 @@ server <- function(input, output, session) {
 
   # find races that only existed in those two seasons (has to be by name)
   round_overlap <- reactive({
+    req(input$season_a, input$season_b)
+
     season_a <- input$season_a
     season_b <- input$season_b
 
@@ -480,8 +514,8 @@ server <- function(input, output, session) {
           linetype = "Driver"
         ) +
         theme_track() +
-        theme(legend.position = "top", legend.text = element_text(color = "#1C1C1C"),
-              legend.title = element_text(color = "#1C1C1C", face = "bold"),
+        theme(legend.position = "top", legend.text = element_text(color = "#1C1C1C", size = 16),
+              legend.title = element_text(color = "#1C1C1C", face = "bold", size = 16),
               legend.box.background = element_rect(color="white"),
               axis.title.y = element_blank(), axis.text.y = element_blank(),
               axis.ticks.y = element_blank())
@@ -513,8 +547,8 @@ server <- function(input, output, session) {
           linetype = "Season"
         ) +
         theme_track() +
-        theme(legend.position = "top", legend.text = element_text(color = "#1C1C1C"),
-              legend.title = element_text(color = "#1C1C1C", face = "bold"),
+        theme(legend.position = "top", legend.text = element_text(color = "#1C1C1C", size = 16),
+              legend.title = element_text(color = "#1C1C1C", face = "bold", size = 16),
               legend.box.background = element_rect(color="white"),
               axis.title.y = element_blank(), axis.text.y = element_blank(),
               axis.ticks.y = element_blank())
@@ -577,10 +611,12 @@ server <- function(input, output, session) {
 
   # Define reactive variables for the schedule and qualifying data
   anim_schedule_data <- reactive({
+    req(input$anim_season_1)
     load_schedule(input$anim_season_1)
   })
 
   anim_quali_data_1 <- reactive({
+    req(input$anim_season_1, input$round_1)
     get_session_drivers_and_teams(input$anim_season_1, input$round_1, "Q") |>
       mutate(driver_code = abbreviation) |>
       select(-abbreviation)
@@ -794,17 +830,16 @@ server <- function(input, output, session) {
     showSpinner()
     req(input$anim_compare_mode)
 
-    suppressWarnings({
-      font_add_google("Titillium Web", "titillium")
-      showtext_auto()
-    })
 
     if (input$anim_compare_mode == "same_session") {
       req(plot_data(), track_data(), animation_running())  # Ensure animation is running
-      outfile <- tempfile(fileext='.gif')
 
       t_df <- track_data()
       plot_data <- plot_data()
+
+
+      plot_data <- smooth_speed(plot_data, "driver", input$smoothing_factor)
+
 
       start_coord <- t_df |> slice(1)
 
@@ -821,12 +856,11 @@ server <- function(input, output, session) {
         scale_color_manual(values = driver_colors) +
         theme_track() +
         theme(plot.title = element_text(family = "titillium", face = "bold", size = 20, color = "#aa1a0a"),
-              plot.subtitle = element_text(family = "titillium", face = "bold", size = 16, color = "white"),
-              plot.caption = element_text(family = "titillium", face = "plain", size = 16, color = "white")) +
+              plot.subtitle = element_text(face = "bold", size = 16, color = "white"),
+              plot.caption = element_text(face = "plain", size = 16, color = "white")) +
         labs(title = paste(input$driver_1, "vs.", input$driver_2, "Qualifying Lap"),
              subtitle = paste(input$season_1, input$round_1),
              x = NULL, y = NULL)
-
 
       # apply track correction
       corrected_plot <- corrected_track(static_plot, plot_data())
@@ -837,21 +871,24 @@ server <- function(input, output, session) {
         labs(
           caption = paste(
             "Time: {sprintf('%.3f', frame_along)} s\n",
-            input$driver_1, " Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_1] - frame_along))]} kph\n",
-            input$driver_2," Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == input$driver_2] - frame_along))]} kph"
+            input$driver_1, " Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$driver == input$driver_1] - frame_along))]} kph\n",
+            input$driver_2," Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$driver == input$driver_2] - frame_along))]} kph"
           )
         )
-      anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10))
-    }
 
+      outfile <- tempfile(fileext = ".gif")
+      animation <- animate(animated_plot, width = 700, height = 700, fps = 10, renderer = gifski_renderer())
+      anim_save(outfile, animation = animation)
+    }
 
     if (input$anim_compare_mode == "diff_seasons") {
       req(plot_data(), track_data(), animation_running())  # Ensure animation is running
 
-      outfile <- tempfile(fileext='.gif')
 
       t_df <- track_data()
       plot_data <- plot_data()
+
+      plot_data <- smooth_speed(plot_data, "season", input$smoothing_factor)
 
       start_coord <- t_df |> slice(1)
 
@@ -864,11 +901,11 @@ server <- function(input, output, session) {
                    color = "black", shape = 18, size = 4) +
         geom_point(data = plot_data(), aes(x = x, y = y, group = season, color = season),
                    size = 3) +
+        scale_color_manual(values = season_colors) +
         theme_track() +
         theme(plot.title = element_text(family = "titillium", face = "bold", size = 20, color = "#aa1a0a"),
-              plot.subtitle = element_text(family = "titillium", face = "bold", size = 16, color = "white"),
-              plot.caption = element_text(family = "titillium", face = "plain", size = 16, color = "white")) +
-        scale_color_manual(values = season_colors) +
+              plot.subtitle = element_text(face = "bold", size = 16, color = "white"),
+              plot.caption = element_text(face = "plain", size = 16, color = "white")) +
         labs(title = paste(input$season_a, "vs.", input$season_b, "Qualifying Lap"),
              subtitle = paste(input$driver_same, input$round_constant),
              x = NULL, y = NULL)
@@ -876,22 +913,27 @@ server <- function(input, output, session) {
       # apply track correction
       corrected_plot <- corrected_track(static_plot, plot_data())
 
+
       animated_plot <- corrected_plot +
         transition_reveal(along = time) +
         ease_aes('linear') +
         labs(
           caption = paste(
             "Time: {sprintf('%.3f', frame_along)} s\n",
-            input$season_a, " Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$season == input$season_a] - frame_along))]} kph\n",
-            input$season_b," Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$season == input$season_b] - frame_along))]} kph"
+            input$season_a, " Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$season == input$season_a] - frame_along))]} kph\n",
+            input$season_b," Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$season == input$season_b] - frame_along))]} kph"
           )
         )
-      anim_save("outfile.gif", animate(animated_plot, width = 700, height = 700, fps = 10))
+
+
+      outfile <- tempfile(fileext = ".gif")
+      animation <- animate(animated_plot, width = 700, height = 700, fps = 10, renderer = gifski_renderer())
+      anim_save(outfile, animation = animation)
     }
     hideSpinner()
 
     # return a list containing the filename
-    list(src = "outfile.gif", contentType = 'image/gif')
+    list(src = outfile, contentType = 'image/gif')
 
   }, deleteFile = TRUE)
 }

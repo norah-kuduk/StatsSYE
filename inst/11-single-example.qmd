@@ -161,6 +161,8 @@ doohan_abudhabi_2024 <- doohan_abudhabi_2024 |> mutate(driver = "Doohan")
 ```{r}
 plot_data <- bind_rows(norris_abudhabi_2024, doohan_abudhabi_2024) |> 
   mutate(driver = as.factor(driver))
+
+single_point<-plot_data |> group_by(driver) |> slice(25)
 ```
 
 ```{r}
@@ -170,7 +172,7 @@ static_plot <- ggplot() +
             linewidth = 8, color = "white") +
   geom_point(data = start_coord, aes(x = x2, y = y2), 
              color = "black", shape = 18, size = 4) +
-  geom_point(data = plot_data, aes(x = x, y = y, group = driver, color = driver), 
+  geom_point(data = single_point, aes(x = x, y = y, group = driver, color = driver), 
              size = 3) +
   scale_color_manual(values = c("Norris" = norris_color, "Doohan" = doohan_color)) +
   theme_track() +

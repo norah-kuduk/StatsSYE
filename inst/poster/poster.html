@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<!--
+Font-awesome icons ie github or twitter
+-->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/brands.css" integrity="sha384-n9+6/aSqa9lBidZMRCQHTHKJscPq6NW4pCQBiMmHdUCvPN8ZOg2zJJTkC7WIezWv" crossorigin="anonymous">
+
+<!--
+Google fonts api stuff
+-->
+<link href='https://fonts.googleapis.com/css?family=Calibri' rel='stylesheet'>
+
+
+
+<title>Interactive Analysis of Formula 1 Qualifying Data</title>
+
+
+
+
+
+
+<style>
+@page {
+size: 48in 36in;
+margin: 0;
+padding: 0;
+}
+body {
+margin: 0;
+font-size: 45px;
+width: 48in;
+height: 36in;
+padding: 0;
+text-align: justify;
+font-family: Calibri;
+}
+.poster_wrap {
+width: 48in;
+height: 36in;
+padding: 0cm;
+}
+.title_container {
+width: 48in;
+height: calc(36in * 0.15);
+overflow: hidden;
+background-color: #aa1a0a;
+border: 0.5cm solid #aa1a0a;
+}
+.logo_left {
+float: left;
+width: 10%;
+height: 100%;
+background-color: #aa1a0a;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.logo_right {
+float: right;
+width: 10%;
+height: 100%;
+background-color: #aa1a0a;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.poster_title {
+text-align: center;
+position: relative;
+float: left;
+width: 80%;
+height: 100%;
+color: #FFFFFF;
+top: 50%;
+transform: translateY(-50%);
+-webkit-transform: translateY(-50%);
+}
+#title {
+font-family: Calibri;
+}
+/* unvisited link */
+a:link {
+color: #aa1a0a;
+}
+.mybreak {
+  break-before: column;
+}
+/* visited link */
+a:visited {
+color: #aa1a0a;
+}
+
+/* mouse over link */
+a:hover {
+color: #aa1a0a;
+}
+
+/* selected link */
+a:active {
+color: #aa1a0a;
+}
+.poster_body {
+-webkit-column-count: 3; /* Chrome, Safari, Opera */
+-moz-column-count: 3; /* Firefox */
+column-count: 3;
+-webkit-column-fill: auto;
+-moz-column-fill: auto;
+column-fill: auto;
+-webkit-column-rule-width: 1mm;
+-moz-column-rule-width: 1mm;
+column-rule-width: 1mm;
+-webkit-column-rule-style: dashed;
+-moz-column-rule-style: dashed;
+column-rule-style: dashed;
+-webkit-column-rule-color: #aa1a0a;
+-moz-column-rule-color: #aa1a0a;
+column-rule-color: #aa1a0a;
+column-gap: 0.5cm;
+padding-left: calc(0.5cm / 2);
+padding-right: calc(0.5cm / 2);
+height: 100%;
+color: #000000
+background-color: #ffffff;
+}
+.poster_title h1 {
+font-size: 75pt;
+margin: 0;
+border: 0;
+font-weight: normal;
+}
+.poster_body_wrap{
+width: calc(48in + 0.5cm + 0.5cm);
+height: calc(36in * 0.83);
+padding-top: calc(36in * 0.005);
+padding-bottom: calc(36in * 0.01);
+background-color: #ffffff;
+}
+.poster_title h3 {
+color: #ffffff;
+font-size: 50pt;
+margin: 0;
+border: 0;
+font-weight: normal;
+}
+.poster_title h3 > sup {
+  font-size: 35pt;
+  margin-left: 0.02em;
+}
+.poster_title h5 {
+color: #FFFFFF;
+font-size: 35pt;
+margin: 0;
+border: 0;
+font-weight: normal;
+}
+img {
+margin-top: 2cm;
+margin-bottom: 0;
+}
+.section {
+  padding: 0.2em;
+}
+.poster_body h1 {
+text-align: center;
+color: #FFFFFF;
+font-size: 65pt;
+border: 2mm solid #aa1a0a;
+background-color: #aa1a0a;
+border-radius: 4mm 0mm;
+margin-top: 2mm;
+margin-bottom: 2mm;
+font-weight: normal;
+}
+.poster_body h2 {
+color: #aa1a0a;
+font-size: 40pt;
+padding-left: 4mm;
+font-weight: normal;
+}
+.span {
+width: 200%;
+}
+/* center align leaflet map,
+from https://stackoverflow.com/questions/52112119/center-leaflet-in-a-rmarkdown-document */
+.html-widget {
+margin: auto;
+position: sticky;
+margin-top: 2cm;
+margin-bottom: 2cm;
+}
+.leaflet.html-widget.html-widget-static-bound.leaflet-container.leaflet-touch.leaflet-fade-anim.leaflet-grab.leaflet-touch-drag.leaflet-touch-zoom {
+position: sticky;
+width: 100%;
+}
+pre.sourceCode.r {
+background-color: #dddddd40;
+border-radius: 4mm;
+padding: 4mm;
+width: 75%;
+/* align-items: center; */
+margin: auto;
+padding-left: 2cm;
+}
+code.sourceCode.r{
+background-color: transparent;
+font-size: 20pt;
+border-radius: 2mm;
+}
+.caption {
+font-size: 25pt;
+}
+.table caption {
+font-size: 25pt;
+padding-bottom: 3mm;
+
+}
+code {
+font-size: 1em;
+font-family: monospace;
+background-color: #aa1a0a24;
+color: #aa1a0a;
+padding: 1.2mm;
+border-radius: 2mm;
+}
+.poster_title code {
+font-size: 1em;
+}
+table {
+font-size: 40px;
+margin: auto;
+border-top: 3px solid #666;
+border-bottom: 3px solid #666;
+}
+table thead th {
+border-bottom: 3px solid #ddd;
+}
+td {
+padding: 8px;
+}
+th {
+padding: 15px;
+}
+caption {
+margin-bottom: 10px;
+}
+.poster_body p {
+margin-right: 4mm;
+margin-left: 4mm;
+margin-top: 6mm;
+margin-bottom: 10mm;
+}
+.poster_body ol {
+margin-right: 4mm;
+margin-left: 4mm;
+}
+#ul {
+margin-right: 4mm;
+margin-left: 4mm;
+}
+.references p {
+font-size: 20pt;
+}
+.orcid img {
+  width: 1em;
+}
+</style>
+</head>
+<body>
+
+
+<div class="poster_wrap">
+<div class="title_container">
+<!-- Left Logo  -->
+<div class="logo_left">
+</div>
+<!-- Poster Title -->
+<div class= "poster_title">
+<h1 id="title">Interactive Analysis of Formula 1 Qualifying Data</h1>
+<h3 id="author">Norah Kuduk<sup></sup>, Matt Higham (Advisor)<sup></sup></h3><br>
+<h5 id="affiliation"><sup></sup> Department of Statistics, St. Lawrence University</h5>
+</div>
+<!-- Right Logo  -->
+<div class="logo_right">
+</div>
+</div>
+
+<div class='poster_body_wrap'>
+<div class='poster_body'>
+<div id="what-is-formula-1-f1" class="section level1">
+<h1>What is Formula 1 (F1)?</h1>
+<ul>
+<li><p>F1 is an international motorsport series governed by the Fédération Internationale de l’Automobile (FIA), involving 20 drivers across 10 teams who compete in 18–24 race weekends annually</p></li>
+<li><p>Each weekend features practice, qualifying, and race sessions, with qualifying laps representing single-lap performance used to decide the starting order for the race.</p></li>
+<li><p>This project centers on the analysis of F1 qualifying sessions, making comparisons between two drivers in the same race or the same driver across different seasons.</p></li>
+<li><p>A car’s fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions.</p></li>
+</ul>
+</div>
+<div id="objectives" class="section level1">
+<h1>Objectives</h1>
+<ol style="list-style-type: decimal">
+<li><p>Compare driver performance across races/seasons, thinking about historically important or interesting sessions.</p></li>
+<li><p>Provide an interactive, visual platform for comparing qualifying laps for users.</p></li>
+</ol>
+</div>
+<div id="methods-tools" class="section level1">
+<h1>Methods &amp; Tools</h1>
+<ul>
+<li><p>Using <code>f1dataR</code> package (R version of fastf1 for python, ergast api, etc.)</p></li>
+<li><p>Creation of a local R package (<code>f1animateR</code>) that uses some functions from <code>f1dataR</code>, but also has functions I’ve created</p></li>
+<li><p>Using Shiny to create the app, hosted on the St. Lawrence University server
+# Results</p></li>
+<li><p>As a case study, we are looking at laps from the São Paulo Grand Prix, both across seasons and across different drivers.</p></li>
+</ul>
+<div id="variable-details" class="section level2">
+<h2>Variable Details</h2>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Variable Name</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Driver</td>
+<td align="left">A 3-letter unique abbriviation of a drivers last name.</td>
+</tr>
+<tr class="even">
+<td align="center">Season</td>
+<td align="left">The year of the session.</td>
+</tr>
+<tr class="odd">
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="center">Lap Time</td>
+<td align="left">The time (in seconds) of the lap.</td>
+</tr>
+<tr class="odd">
+<td align="center">Compound</td>
+<td align="left">The name of the tire compund the driver is using. Different compounds have different grip levels.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="season-comparison" class="section level2">
+<h2>Season Comparison</h2>
+First, we look at all qualifying laps and postioning in fastest laps from Lando Norris in 2023 versus 2024.
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:tiredegplot"></span>
+<img src="poster_files/figure-html/tiredegplot-1.png" alt="Plot of lap times and tire degredation across the two seasons" width="100%" />
+<p class="caption">
+Figure 1: Plot of lap times and tire degredation across the two seasons
+</p>
+</div>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+driver
+</th>
+<th style="text-align:right;">
+season
+</th>
+<th style="text-align:right;">
+lap_time
+</th>
+<th style="text-align:left;">
+compound
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+NOR
+</td>
+<td style="text-align:right;">
+2023
+</td>
+<td style="text-align:right;">
+70.021
+</td>
+<td style="text-align:left;">
+SOFT
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NOR
+</td>
+<td style="text-align:right;">
+2024
+</td>
+<td style="text-align:right;">
+83.405
+</td>
+<td style="text-align:left;">
+INTERMEDIATE
+</td>
+</tr>
+</tbody>
+</table>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:animsampleplot"></span>
+<img src="poster_files/figure-html/animsampleplot-1.png" alt="Snapshot of a late point in the lap where cars are very far apart (about 64 seconds in)" width="100%" />
+<p class="caption">
+Figure 2: Snapshot of a late point in the lap where cars are very far apart (about 64 seconds in)
+</p>
+</div>
+</div>
+<div id="driver-comparison" class="section level2">
+<h2>Driver Comparison</h2>
+<p>Second, we look at the fastest laps from Max Verstappen and Zhou Guanyu in 2023.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+driver
+</th>
+<th style="text-align:right;">
+season
+</th>
+<th style="text-align:right;">
+lap_time
+</th>
+<th style="text-align:left;">
+compound
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+VER
+</td>
+<td style="text-align:right;">
+2023
+</td>
+<td style="text-align:right;">
+70.162
+</td>
+<td style="text-align:left;">
+SOFT
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ZHO
+</td>
+<td style="text-align:right;">
+2023
+</td>
+<td style="text-align:right;">
+71.275
+</td>
+<td style="text-align:left;">
+SOFT
+</td>
+</tr>
+</tbody>
+</table>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:driveranimplot"></span>
+<img src="poster_files/figure-html/driveranimplot-1.png" alt="Snapshot of a late point in the lap where the two drivers' cars are far apart (about 69 seconds in)" width="100%" />
+<p class="caption">
+Figure 3: Snapshot of a late point in the lap where the two drivers’ cars are far apart (about 69 seconds in)
+</p>
+</div>
+</div>
+</div>
+<div id="future-work" class="section level1">
+<h1>Future Work</h1>
+<ul>
+<li>Implementing a feature that allows user to select which lap number they’d like to visualize.</li>
+<li>Utilize sector times more in analysis.</li>
+<li>Eventually expland to race simulations.</li>
+</ul>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>Data is a very large part of Formula 1, cisual analytics offer deeper insight into qualifying performance for the average viewer.
+Interactive tools like Shiny make F1 data more accessible and fun</p>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<p><code>f1dataR</code>: Formula 1 data access package. Available at: <a href="https://cran.r-project.org/package=f1dataR">https://cran.r-project.org/package=f1dataR</a>
+What is Formula 1? Available at: <a href="https://www.formula1.com/en/page/what-is-f1">https://www.formula1.com/en/page/what-is-f1</a></p>
+</div>
+</div>
+</div>
+
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,320 @@
+---
+title: "Interactive Analysis of Formula 1 Qualifying Data"
+author:
+  - name: Norah Kuduk
+  - name: Matt Higham (Advisor)
+affiliation:
+    address: Department of Statistics, St. Lawrence University
+column_numbers: 3
+poster_height:	"36in"	
+poster_width:	"48in"
+primary_colour: "#aa1a0a"
+secondary_colour: "#aa1a0a"
+titlebox_bordercol:	"#aa1a0a"
+titlebox_borderwidth:	"0.5cm"
+font_family:	"Calibri"
+logoright_name: 
+logoleft_name:
+sectitle_bgcol:	"#aa1a0a"
+author_textcol:	"#ffffff"
+sectitle2_textcol:	"#aa1a0a"
+link_col:	"#aa1a0a"
+output: 
+  posterdown::posterdown_html:
+    self_contained: false
+
+bibliography: packages.bib
+---
+
+```{r setup, message=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      tidy = FALSE,
+                      message = FALSE,
+                      fig.align = 'center',
+                      out.width = "100%")
+options(knitr.table.format = "html") 
+library(tidyverse)
+library(f1dataR)
+library(f1animateR)
+library(knitr)
+library(ggrepel)
+```
+
+# What is Formula 1 (F1)?
+
+- F1 is an international motorsport series governed by the Fédération Internationale de l'Automobile (FIA), involving 20 drivers across 10 teams who compete in 18–24 race weekends annually
+
+- Each weekend features practice, qualifying, and race sessions, with qualifying laps representing single-lap performance used to decide the starting order for the race. 
+
+- This project centers on the analysis of F1 qualifying sessions, making comparisons between two drivers in the same race or the same driver across different seasons. 
+
+- A car’s fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions. 
+
+# Objectives
+
+1. Compare driver performance across races/seasons, thinking about historically important or interesting sessions.
+
+2. Provide an interactive, visual platform for comparing qualifying laps for users.
+   
+
+# Methods & Tools
+
+- Using `f1dataR` package (R version of fastf1 for python, ergast api, etc.)
+
+- Creation of a local R package (`f1animateR`) that uses some functions from `f1dataR`, but also has functions I've created
+
+- Using Shiny to create the app, hosted on the St. Lawrence University server
+# Results
+
+- As a case study, we are looking at laps from the São Paulo Grand Prix, both across seasons and across different drivers.
+
+## Variable Details
+| Variable Name | Description        |
+|:----:|:-----------------|
+| Driver   | A 3-letter unique abbriviation of a drivers last name.      |
+| Season   | The year of the session.        |
+|    |                     |
+| Lap Time    | The time (in seconds) of the lap.        |
+| Compound    | The name of the tire compund the driver is using. Different compounds have different grip levels.  |
+
+## Season Comparison
+First, we look at all qualifying laps and postioning in fastest laps from Lando Norris in 2023 versus 2024.
+```{r tiredegplot, out.width='100%', fig.align='center', fig.cap='Plot of lap times and tire degredation across the two seasons', fig.height=4}
+fetch_quali_data_seasons <- function(season_a, season_b, round) {
+  tryCatch(
+    {
+      results_a <- load_session_laps(season_a, round, "Q") |> mutate(season = season_a)
+      results_b <- load_session_laps(season_b, round, "Q") |> mutate(season = season_b)
+      if (is.null(results_a) || is.null(results_b) || nrow(results_a) == 0 || nrow(results_b) == 0) {
+        return(NULL)
+      } else {
+        results <- bind_rows(results_a, results_b)
+        return(results)
+      }
+      
+    },
+    error = function(e) NULL
+  )
+}
+
+quali_laps <- fetch_quali_data_seasons(2024, 2023, "São Paulo Grand Prix") |>
+  filter(driver == "NOR") |>
+  filter(lap_time > 0) |>
+  select(driver, season, lap_time, lap_number, compound) |>
+  arrange(desc(lap_time)) |>
+  unique() |>
+  mutate(index = row_number()) |>
+  mutate(season = as.factor(season))
+
+
+ggplot(quali_laps, aes(x = index, y = lap_time)) +
+  geom_segment(aes(x = index, xend = index, y = 0, yend = lap_time, color = compound, linetype = season)) +
+  geom_point(size = 1.5, aes(color = compound), alpha = 0.7) +
+  geom_label_repel(aes(label = lap_number), nudge_x = 0.2) +
+  scale_color_manual(values = c("SOFT" = "red", "MEDIUM" = "gold", "HARD" = "white", "WET" = "blue", "INTERMEDIATE" = "green",
+                                "HYPERSOFT" = "lightpink", "ULTRASOFT" = "purple", "SUPERSOFT" = "tomato", "SUPERHARD" = "orange")) +
+  coord_flip() +
+  labs(
+    title = "Tire Performance Degradation for Lando Norris",
+    y = "Lap Time (seconds)",
+    color = "Tire Compound",
+    linetype = "Season"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top", legend.text = element_text(color = "#1C1C1C"),
+        legend.title = element_text(color = "#1C1C1C", face = "bold"),
+        legend.box.background = element_rect(color="white"),
+        axis.title.y = element_blank(), axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        grid.major = element_blank(), grid.minor = element_blank())
+```
+```{r resultstable, out.width='80%',fig.align='center', fig.title='Table of qualifying results for Lando Norris'}
+fetch_quali_data <- function(season, round) {
+  tryCatch(
+    {
+      results <- load_session_laps(season, round, "Q")
+      if (is.null(results) || nrow(results) == 0) return(NULL)
+      results
+    },
+    error = function(e) NULL
+  )
+}
+
+year_1 <- get_session_drivers_and_teams(2024, "São Paulo Grand Prix", "Q") |>
+  mutate(driver_code = abbreviation) |>
+  select(-abbreviation)
+
+year_2 <- get_session_drivers_and_teams(2023, "São Paulo Grand Prix", "Q") |>
+  mutate(driver_code = abbreviation) |>
+  select(-abbreviation)
+
+data <- bind_rows(year_1, year_2) |> filter(driver_code == "NOR")
+
+quali_laps_a <- fetch_quali_data(2024, "São Paulo Grand Prix") |>
+  filter(driver == "NOR") |>
+  filter(lap_time > 0) |>
+  mutate(season = 2024)
+
+quali_laps_b <- fetch_quali_data(2023, "São Paulo Grand Prix") |>
+  filter(driver == "NOR") |>
+  filter(lap_time > 0) |>
+  select(driver, lap_time, lap_number, compound) |>
+  mutate(season = 2023)
+
+data <- bind_rows(quali_laps_a, quali_laps_b) |>
+  unique() |>
+  arrange(lap_time) |>
+  group_by(season) |>
+  filter(lap_time == min(lap_time)) |>
+  select(driver, season, lap_time, compound) 
+
+kable(data)
+```
+
+```{r animsampleplot, out.width='100%', echo=FALSE, warnings=FALSE, fig.cap='Snapshot of a late point in the lap where cars are very far apart (about 64 seconds in)', fig.height=5}
+brazil24 <- get_quali_telemetry(laps = "fastest", season = 2024, round = 21, driver = "NOR", verbose = FALSE)
+brazil23 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 20, driver = "NOR", verbose = FALSE)
+
+# smooth Abu Dhabi track data
+brazil_track <- smooth_track(brazil24)
+start_coord <- brazil_track |> slice(1)
+
+# det team and driver colors
+color_24 <- driver_color("NOR")
+color_23 <- "darkorange4"
+
+# Add driver labels and combine data
+brazil24 <- brazil24 |> mutate(season = 2024)
+brazil23 <- brazil23 |> mutate(season = 2023)
+
+plot_data <- bind_rows(brazil24, brazil23) |> mutate(season = as.factor(season)) 
+
+time_data <- plot_data |> group_by(season) |> filter(time > 68.9) |> filter(time < 68.98)
+
+# Pick two consecutive points near the start of the track to show direction
+arrow_start <- brazil24 |> slice(3)
+arrow_end <- brazil24 |> slice(10)
+
+ # Static plot
+static_plot <- ggplot() +
+  geom_path(data = brazil_track, aes(x = x2, y = y2, group = 1),
+            linewidth = 4, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+             color = "black", shape = 18, size = 3) +
+  geom_point(data = time_data, aes(x = x, y = y, group = season, color = season),
+             size = 2) +
+  geom_segment(
+    data = NULL,
+    aes(x = arrow_start$x, y = arrow_start$y,
+        xend = arrow_end$x, yend = arrow_end$y),
+    arrow = arrow(length = unit(0.1, "cm"), type = "closed"),
+    color = "gray40",
+    linewidth = 0.7
+  ) +
+  scale_color_manual(values = c("2024" = color_24, "2023" = color_23)) +
+  theme_track() +
+  labs(title = "2024 vs. 2023 Norris Qualifying Lap",
+     subtitle = "São Paulo Grand Prix",
+     x = NULL, y = NULL)
+
+# Correct the track alignment
+corrected_plot <- corrected_track(static_plot, brazil24) + geom_segment(
+    data = NULL,
+    aes(x = arrow_start$x, y = arrow_start$y,
+        xend = arrow_end$x, yend = arrow_end$y),
+    arrow = arrow(length = unit(0.1, "cm"), type = "closed"),
+    color = "gray40",
+    linewidth = 0.7
+  ) 
+
+corrected_plot
+```
+
+## Driver Comparison
+Second, we look at the fastest laps from Max Verstappen and Zhou Guanyu in 2023.
+
+```{r drivercomp, out.width='80%', fig.align='center', fig.cap='table of qualifying results for Max Verstappen and Zhou Guanyu'}
+quali_laps <- fetch_quali_data(2023, "São Paulo Grand Prix") |>
+  filter(driver == "VER" | driver == "ZHO") |>
+  filter(lap_time > 0) |>
+  select(driver, lap_time, lap_number, compound) |>
+  mutate(season = 2023) |> 
+  group_by(driver) |>
+  filter(lap_time == min(lap_time)) |>
+  select(driver, season, lap_time, compound) 
+
+kable(quali_laps)
+```
+
+```{r driveranimplot, out.width='100%', fig.align='center', fig.cap='Snapshot of a late point in the lap where the two drivers\' cars are far apart (about 69 seconds in)'}
+
+ver <- get_quali_telemetry(laps = "fastest", season = 2023, round = 20, driver = "VER", verbose = FALSE)
+zho <- get_quali_telemetry(laps = "fastest", season = 2023, round = 20, driver = "ZHO", verbose = FALSE)
+
+# smooth Abu Dhabi track data
+brazil_track <- smooth_track(ver)
+start_coord <- brazil_track |> slice(1)
+
+# det team and driver colors
+ver_color <- constructor_color("redbull")
+zho_color <- constructor_color("sauber")
+
+# Add driver labels and combine data
+ver <- ver |> mutate(driver = "VER")
+zho <- zho |> mutate(driver = "ZHO")
+
+plot_data <- bind_rows(ver, zho) |> mutate(driver = as.factor(driver))
+
+time_data <- plot_data |> group_by(driver) |> filter(time > 63.2) |> filter(time < 63.4)
+
+# Pick two consecutive points near the start of the track to show direction
+arrow_start <- ver |> slice(3)
+arrow_end <- ver |> slice(10)
+
+# Static plot
+static_plot <- ggplot() +
+  geom_path(data = brazil_track, aes(x = x2, y = y2, group = 1),
+            linewidth = 4, color = "white") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+             color = "black", shape = 18, size = 3) +
+  geom_point(data = time_data, aes(x = x, y = y, group = driver, color = driver),
+             size = 2) +
+  scale_color_manual(values = c("VER" = ver_color, "ZHO" = zho_color)) +
+  geom_segment(
+    data = NULL,
+    aes(x = arrow_start$x, y = arrow_start$y,
+        xend = arrow_end$x, yend = arrow_end$y),
+    arrow = arrow(length = unit(0.1, "cm"), type = "closed"),
+    color = "gray40",
+    linewidth = 0.7
+  ) +
+  theme_track() +
+  labs(title = "Verstappen vs. Zhou Qualifying Lap",
+       subtitle = "São Paulo Grand Prix 2023",
+       x = NULL, y = NULL)
+
+# Correct the track alignment
+corrected_plot <- corrected_track(static_plot, ver)
+
+corrected_plot
+```
+
+# Future Work
+
+- Implementing a feature that allows user to select which lap number they'd like to visualize. 
+- Utilize sector times more in analysis and eventually expland to race simulations.
+
+# Conclusion
+
+Data is a very large part of Formula 1, cisual analytics offer deeper insight into qualifying performance for the average viewer. 
+Interactive tools like Shiny make F1 data more accessible and fun
+
+```{r, include=FALSE}
+knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')
+```
+
+# References
+
+`f1dataR`: Formula 1 data access package. Available at: [https://cran.r-project.org/package=f1dataR](https://cran.r-project.org/package=f1dataR)
+What is Formula 1? Available at: [https://www.formula1.com/en/page/what-is-f1](https://www.formula1.com/en/page/what-is-f1)
