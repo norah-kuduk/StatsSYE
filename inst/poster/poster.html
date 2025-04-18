@@ -280,15 +280,18 @@ font-size: 20pt;
 <div class="title_container">
 <!-- Left Logo  -->
 <div class="logo_left">
+<img src= 'figures/f1-logo.png' style="width: 80%">
 </div>
 <!-- Poster Title -->
 <div class= "poster_title">
-<h1 id="title">Interactive Analysis of Formula 1 Qualifying Data</h1>
+<h1 id="title">Interactive Analysis of Formula 1
+Qualifying Data</h1>
 <h3 id="author">Norah Kuduk<sup></sup>, Matt Higham (Advisor)<sup></sup></h3><br>
 <h5 id="affiliation"><sup></sup> Department of Statistics, St. Lawrence University</h5>
 </div>
 <!-- Right Logo  -->
 <div class="logo_right">
+<img src=figures/slu_white.png style="width: 80%">
 </div>
 </div>
 
@@ -297,9 +300,8 @@ font-size: 20pt;
 <div id="what-is-formula-1-f1" class="section level1">
 <h1>What is Formula 1 (F1)?</h1>
 <ul>
-<li><p>F1 is an international motorsport series governed by the Fédération Internationale de l’Automobile (FIA), involving 20 drivers across 10 teams who compete in 18–24 race weekends annually</p></li>
-<li><p>Each weekend features practice, qualifying, and race sessions, with qualifying laps representing single-lap performance used to decide the starting order for the race.</p></li>
-<li><p>This project centers on the analysis of F1 qualifying sessions, making comparisons between two drivers in the same race or the same driver across different seasons.</p></li>
+<li><p>F1 is an international motorsport series governed by the Fédération Internationale de l’Automobile (FIA), involving 20 drivers across 10 teams that compete in 18-24 race weekends across a season.</p></li>
+<li><p>Each weekend features practice, qualifying, and race sessions, with qualifying laps representing peak performance used to decide the starting order for the race.</p></li>
 <li><p>A car’s fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions.</p></li>
 </ul>
 </div>
@@ -307,17 +309,22 @@ font-size: 20pt;
 <h1>Objectives</h1>
 <ol style="list-style-type: decimal">
 <li><p>Compare driver performance across races/seasons, thinking about historically important or interesting sessions.</p></li>
-<li><p>Provide an interactive, visual platform for comparing qualifying laps for users.</p></li>
+<li><p>Provide an interactive, visual platform to compare qualifying laps for users.</p></li>
 </ol>
 </div>
 <div id="methods-tools" class="section level1">
 <h1>Methods &amp; Tools</h1>
 <ul>
-<li><p>Using <code>f1dataR</code> package (R version of fastf1 for python, ergast api, etc.)</p></li>
-<li><p>Creation of a local R package (<code>f1animateR</code>) that uses some functions from <code>f1dataR</code>, but also has functions I’ve created</p></li>
-<li><p>Using Shiny to create the app, hosted on the St. Lawrence University server
-# Results</p></li>
-<li><p>As a case study, we are looking at laps from the São Paulo Grand Prix, both across seasons and across different drivers.</p></li>
+<li><p>Using <code>f1dataR</code> package (R version of <code>fastf1</code> for Python, Ergast API, etc.).</p></li>
+<li><p>this is an extra bullet point to tray and fix spacing</p></li>
+<li><p>Creation of a local R package (<code>f1animateR</code>) that uses some functions from <code>f1dataR</code>, as well as helper functions when using <code>gganimate</code>.</p></li>
+<li><p>Using Shiny to create the app, hosted on the St. Lawrence University server.</p></li>
+</ul>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<ul>
+<li>As a case study, we are looking at laps from the São Paulo Grand Prix, both across seasons and across different drivers.</li>
 </ul>
 <div id="variable-details" class="section level2">
 <h2>Variable Details</h2>
@@ -358,144 +365,146 @@ font-size: 20pt;
 </div>
 <div id="season-comparison" class="section level2">
 <h2>Season Comparison</h2>
-First, we look at all qualifying laps and postioning in fastest laps from Lando Norris in 2023 versus 2024.
+<ul>
+<li>The season comparison highlights how wet weather conditions in 2023 led to significantly slower lap times compared to the dry conditions in 2024, as the positions between the two seasons are drastically far from each other.</li>
+</ul>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:tiredegplot"></span>
-<img src="poster_files/figure-html/tiredegplot-1.png" alt="Plot of lap times and tire degredation across the two seasons" width="100%" />
+<img src="poster_files/figure-html/tiredegplot-1.png" alt="Plot of the five fastest lap times and tire degredation across the two seasons." width="100%" />
 <p class="caption">
-Figure 1: Plot of lap times and tire degredation across the two seasons
+Figure 1: Plot of the five fastest lap times and tire degredation across the two seasons.
 </p>
 </div>
 <table>
+<caption>
+<span id="tab:resultstable">Table 1: </span>Qualifying results for Lando Norris.
+</caption>
 <thead>
 <tr>
-<th style="text-align:left;">
+<th style="text-align:center;">
 driver
 </th>
-<th style="text-align:right;">
+<th style="text-align:center;">
 season
 </th>
-<th style="text-align:right;">
+<th style="text-align:center;">
 lap_time
 </th>
-<th style="text-align:left;">
+<th style="text-align:center;">
 compound
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
+<td style="text-align:center;">
 NOR
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 2023
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 70.021
 </td>
-<td style="text-align:left;">
+<td style="text-align:center;">
 SOFT
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td style="text-align:center;">
 NOR
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 2024
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 83.405
 </td>
-<td style="text-align:left;">
+<td style="text-align:center;">
 INTERMEDIATE
 </td>
 </tr>
 </tbody>
 </table>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:animsampleplot"></span>
-<img src="poster_files/figure-html/animsampleplot-1.png" alt="Snapshot of a late point in the lap where cars are very far apart (about 64 seconds in)" width="100%" />
+<img src="poster_files/figure-html/animsampleplot-1.png" alt="Snapshot of a late point in the lap where cars are very far apart (about 69 seconds in)." width="100%" />
 <p class="caption">
-Figure 2: Snapshot of a late point in the lap where cars are very far apart (about 64 seconds in)
+Figure 2: Snapshot of a late point in the lap where cars are very far apart (about 69 seconds in).
 </p>
 </div>
 </div>
 <div id="driver-comparison" class="section level2">
 <h2>Driver Comparison</h2>
-<p>Second, we look at the fastest laps from Max Verstappen and Zhou Guanyu in 2023.</p>
+<ul>
+<li>The driver comparison shows how in constant conditions, differences in drivers/teams can have drastic effect on qualifying times, but even between 1st and 20th, the margins are very small.</li>
+</ul>
 <table>
+<caption>
+<span id="tab:drivercomp">Table 2: </span>Qualifying results for Verstappen and Zhou
+</caption>
 <thead>
 <tr>
-<th style="text-align:left;">
+<th style="text-align:center;">
 driver
 </th>
-<th style="text-align:right;">
+<th style="text-align:center;">
 season
 </th>
-<th style="text-align:right;">
+<th style="text-align:center;">
 lap_time
 </th>
-<th style="text-align:left;">
+<th style="text-align:center;">
 compound
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
+<td style="text-align:center;">
 VER
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 2023
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 70.162
 </td>
-<td style="text-align:left;">
+<td style="text-align:center;">
 SOFT
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td style="text-align:center;">
 ZHO
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 2023
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 71.275
 </td>
-<td style="text-align:left;">
+<td style="text-align:center;">
 SOFT
 </td>
 </tr>
 </tbody>
 </table>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:driveranimplot"></span>
-<img src="poster_files/figure-html/driveranimplot-1.png" alt="Snapshot of a late point in the lap where the two drivers' cars are far apart (about 69 seconds in)" width="100%" />
+<img src="poster_files/figure-html/driveranimplot-1.png" alt="Snapshot of a late point in the lap where the two drivers' cars are far apart (about 63 seconds in)." width="100%" />
 <p class="caption">
-Figure 3: Snapshot of a late point in the lap where the two drivers’ cars are far apart (about 69 seconds in)
+Figure 3: Snapshot of a late point in the lap where the two drivers’ cars are far apart (about 63 seconds in).
 </p>
 </div>
 </div>
 </div>
-<div id="future-work" class="section level1">
-<h1>Future Work</h1>
-<ul>
-<li>Implementing a feature that allows user to select which lap number they’d like to visualize.</li>
-<li>Utilize sector times more in analysis.</li>
-<li>Eventually expland to race simulations.</li>
-</ul>
-</div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p>Data is a very large part of Formula 1, cisual analytics offer deeper insight into qualifying performance for the average viewer.
-Interactive tools like Shiny make F1 data more accessible and fun</p>
+<p>Data is a very large part of Formula 1. Visual analytics offer deeper insight into qualifying performance for the average viewer.
+Interactive tools like Shiny make F1 data more accessible and fun.</p>
 </div>
 <div id="references" class="section level1">
 <h1>References</h1>
-<p><code>f1dataR</code>: Formula 1 data access package. Available at: <a href="https://cran.r-project.org/package=f1dataR">https://cran.r-project.org/package=f1dataR</a>
-What is Formula 1? Available at: <a href="https://www.formula1.com/en/page/what-is-f1">https://www.formula1.com/en/page/what-is-f1</a></p>
+<p><code>f1dataR</code>: Formula 1 data access package. Available at: <a href="https://cran.r-project.org/package=f1dataR">https://cran.r-project.org/package=f1dataR</a></p>
+<p>What is Formula 1? Available at: <a href="https://www.formula1.com/en/page/what-is-f1">https://www.formula1.com/en/page/what-is-f1</a></p>
 </div>
 </div>
 </div>
