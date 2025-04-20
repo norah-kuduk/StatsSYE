@@ -54,9 +54,9 @@ library(ggrepel)
 
 - F1 is an international motorsport series governed by the Fédération Internationale de l'Automobile (FIA), involving 20 drivers across 10 teams that compete in 18-24 race weekends across a season.
 
-- Each weekend features practice, qualifying, and race sessions, with qualifying laps representing peak performance used to decide the starting order for the race. 
+- Each weekend features practice, qualifying, and race sessions, with qualifying laps used to decide the starting order for the race. 
 
-- A car’s fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions. 
+- A driver’s fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions, which provides a baseline to compare with.  
 
 # Objectives
 
@@ -67,13 +67,11 @@ library(ggrepel)
 
 # Methods & Tools
 
-- Using `f1dataR` package (R version of `fastf1` for Python, Ergast API, etc.).
-
-- this is an extra bullet point to tray and fix spacing
+- Using `f1dataR` package. This is an adapted R version of the `fastf1` package for Python, which uses Ergast API to pull data from F1 sessions.
 
 - Creation of a local R package (`f1animateR`) that uses some functions from `f1dataR`, as well as helper functions when using `gganimate`.
 
-- Using Shiny to create the app, hosted on the St. Lawrence University server.
+- Using Shiny to create the app, hosted on the St. Lawrence University server. Find it at [https://stlawu.shinyapps.io/f1-qualifying-app/](https://stlawu.shinyapps.io/f1-qualifying-app/).
 
 # Results
 
@@ -326,4 +324,4 @@ knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')
 
 `f1dataR`: Formula 1 data access package. Available at: [https://cran.r-project.org/package=f1dataR](https://cran.r-project.org/package=f1dataR)
 
-What is Formula 1? Available at: [https://www.formula1.com/en/page/what-is-f1](https://www.formula1.com/en/page/what-is-f1)
+*What is Formula 1?* Available at: [https://www.formula1.com/en/page/what-is-f1](https://www.formula1.com/en/page/what-is-f1)
