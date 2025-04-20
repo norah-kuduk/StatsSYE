@@ -1,10 +1,12 @@
 ---
-title: "Interactive Analysis of Formula 1 \nQualifying Data"
+title: "**Interactive Analysis of Formula 1 Qualifying Data**"
 author:
-  - name: Norah Kuduk
-  - name: Matt Higham (Advisor)
+  - name: 'Norah Kuduk'
 affiliation:
-    address: Department of Statistics, St. Lawrence University
+  - address: Department of Mathematics, Computer Science, Statistics, and Data Science
+  - address: St. Lawrence University
+  - address: Advised by Dr. Matt Higham
+
 column_numbers: 3
 poster_height:	"36in"	
 poster_width:	"48in"
@@ -13,8 +15,8 @@ secondary_colour: "#aa1a0a"
 titlebox_bordercol:	"#aa1a0a"
 titlebox_borderwidth:	"0.5cm"
 font_family:	"Calibri"
-logoright_name: "figures/slu_white.png"
-logoleft_name: "figures/f1-logo.png"
+logoright_name: "figures/qr-code.png"
+logoleft_name: "figures/slu_white.png"
 sectitle_bgcol:	"#aa1a0a"
 author_textcol:	"#ffffff"
 sectitle2_textcol:	"#aa1a0a"
@@ -22,10 +24,16 @@ link_col:	"#aa1a0a"
 output: 
   posterdown::posterdown_html:
     self_contained: false
-    
 
 bibliography: packages.bib
 ---
+
+```{css, echo=FALSE}
+img {
+margin-top: 1pt;
+margin-bottom: 0.5pt;
+}
+```
 
 ```{r setup, message=FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
@@ -84,7 +92,7 @@ library(ggrepel)
 
 - The season comparison highlights how wet weather conditions in 2023 led to significantly slower lap times compared to the dry conditions in 2024, as the positions between the two seasons are drastically far from each other. 
 
-```{r tiredegplot, out.width='100%', fig.align='center', fig.cap='Plot of the five fastest lap times and tire degredation across the two seasons.', fig.height=3}
+```{r tiredegplot, out.width='100%', fig.align='center', fig.cap='Plot of the five fastest lap times and tire degredation across the two seasons.', fig.height=4}
 fetch_quali_data_seasons <- function(season_a, season_b, round) {
   tryCatch(
     {
@@ -108,7 +116,7 @@ quali_laps <- fetch_quali_data_seasons(2024, 2023, "São Paulo Grand Prix") |>
   select(driver, season, lap_time, lap_number, compound) |>
   arrange(lap_time) |>
   group_by(season) |>
-  slice(1:5) |>
+  slice(1:7) |>
   ungroup() |>
   arrange(desc(lap_time)) |>
   mutate(index = row_number()) |> 
@@ -273,8 +281,8 @@ plot_data <- bind_rows(ver, zho) |> mutate(driver = as.factor(driver))
 time_data <- plot_data |> group_by(driver) |> filter(time > 63.2) |> filter(time < 63.4)
 
 # Pick two consecutive points near the start of the track to show direction
-arrow_start <- ver |> slice(3)
-arrow_end <- ver |> slice(10)
+arrow_start <- ver |> slice(4)
+arrow_end <- ver |> slice(12)
 
 # Static plot
 static_plot <- ggplot() +
@@ -306,8 +314,9 @@ corrected_plot
 
 # Conclusion
 
-Data is a very large part of Formula 1. Visual analytics offer deeper insight into qualifying performance for the average viewer. 
-Interactive tools like Shiny make F1 data more accessible and fun.
+- Data plays a crucial role in Formula 1, and visual analytics can offer fans a deeper understanding of qualifying performance. 
+
+- Interactive tools like Shiny help make F1 data more accessible, insightful, and enjoyable for the average viewer.
 
 ```{r, include=FALSE}
 knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')
