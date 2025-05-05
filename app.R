@@ -17,7 +17,6 @@ library(shinycssloaders)
 library(showtext)
 library(gifski)
 
-
 ## setup_fastf1()
 ## devtools::install_github("https://github.com/norah-kuduk/StatsSYE”)
 ## use_virtualenv("f1dataR_env")
