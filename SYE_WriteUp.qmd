@@ -1,12 +1,15 @@
 ---
-title: "Interactive Analysis of Formula 1 Qualifying Data"
-author: 
-  - name: "Norah Kuduk"
-  - name: "Advisor: Dr. Matt Higham"
-institute: "St. Lawrence University"
-number-sections: true
-date: "5/9/25"
-date-format: "MMM D, YYYY"
+title: ""
+author: ""
+date: ""
+# title: "Interactive Analysis of Formula 1 Qualifying Data"
+# author: 
+#   - name: "Norah Kuduk"
+#   - name: "Advisor: Dr. Matt Higham"
+# institute: "St. Lawrence University"
+# number-sections: true
+# date: "5/9/25"
+# date-format: "MMM D, YYYY"
 format:
   pdf:
      toc: true
