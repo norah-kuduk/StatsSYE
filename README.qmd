@@ -53,6 +53,8 @@ fetch_quali_data_seasons <- function(season_a, season_b, round) {
 
 In this project, we focus on analyzing motorsport telemetry data, using data from the 2018 to 2024 Formula 1 (F1) seasons. Formula 1 has a vast amount of data used widely in the sport, making it perfect for visualization and analysis. This project centers on the analysis of F1 qualifying sessions, highlighting comparisons between two drivers in the same race or the same driver across different seasons. We built a Shiny application to allow users to interactively explore qualifying data and create custom visualizations by selecting drivers, seasons, and circuits. As case studies, we look at different qualifying sessions across years with the same driver and across drivers during the same race.
 
+For more information, please view either the [paper](https://github.com/norah-kuduk/StatsSYE/blob/master/SYE_WriteUp.pdf) or the [poster](https://github.com/norah-kuduk/StatsSYE/blob/master/SYE_Poster.pdf) associated. 
+
 The Shiny app built leverages Formula 1 telemetry data to create the plots for exploring and animating qualifying laps. The full app can be found at [https://stlawu.shinyapps.io/f1-qualifying-app/](https://stlawu.shinyapps.io/f1-qualifying-app/). The app has three tabs: an outline/instruction page, an exploration page, and an animation page. 
 
 ### f1dataR and Shiny

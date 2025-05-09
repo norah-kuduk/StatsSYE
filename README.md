@@ -15,6 +15,12 @@ circuits. As case studies, we look at different qualifying sessions
 across years with the same driver and across drivers during the same
 race.
 
+For more information, please view either the
+[paper](https://github.com/norah-kuduk/StatsSYE/blob/master/SYE_WriteUp.pdf)
+or the
+[poster](https://github.com/norah-kuduk/StatsSYE/blob/master/SYE_Poster.pdf)
+associated.
+
 The Shiny app built leverages Formula 1 telemetry data to create the
 plots for exploring and animating qualifying laps. The full app can be
 found at <https://stlawu.shinyapps.io/f1-qualifying-app/>. The app has

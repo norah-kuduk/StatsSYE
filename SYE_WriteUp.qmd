@@ -7,22 +7,21 @@ institute: "St. Lawrence University"
 number-sections: true
 date: "5/9/25"
 date-format: "MMM D, YYYY"
-# format:
-#   pdf:
-#      toc: true
-#      embed-resources: true
-#      include-in-header:
-#          text: |
-#            \usepackage{lipsum}
-#            \usepackage{setspace}
-#            \onehalfspacing
-#            \linespread{2}
-#      include-before-body: toc_separator.tex
-
 format:
- html:
-   embed-resources: true
-   toc: true
+  pdf:
+     toc: true
+     embed-resources: true
+     include-in-header:
+         text: |
+           \usepackage{lipsum}
+           \usepackage{setspace}
+           \onehalfspacing
+           \linespread{2}
+     include-before-body: toc_separator.tex
+# format:
+#  html:
+#    embed-resources: true
+#    toc: true
 ---
 
 ```{r}
@@ -88,21 +87,21 @@ fetch_quali_data_seasons <- function(season_a, season_b, round) {
 
 # Introduction
 
-In this project, we focus on analyzing motorsport telemetry data, using data from the 2018 to 2024 Formula 1 (F1) seasons. Formula 1 has a vast amount of data used widely in the sport, making it perfect for visualization and analysis. This project centers on the analysis of F1 qualifying sessions, highlighting comparisons between two drivers in the same race or the same driver across different seasons. We built a Shiny application to allow users to interactively explore qualifying data and create custom visualizations by selecting drivers, seasons, and circuits. As case studies, we look at different qualifying sessions across years with the same driver and across drivers during the same race. For looking at different years, we look at Lando Norris during the São Paulo Grand Prix in 2023 versus in 2024. We look at Charles Leclerc and Oscar Piastri during the 2024 Monaco Grand Prix to compare drivers (and teams). Finally, we look at the 2024 Canadian Grand Prix, to observe differentials between teammates in Max Verstappen and Sergio Pérez.
+In this project, we focus on analyzing motorsport telemetry data, using data from the 2018 to 2024 Formula 1 (F1) seasons. Formula 1 has a vast amount of data used widely in the sport, making it perfect for visualization and analysis. This project centers on the analysis of F1 qualifying sessions, highlighting comparisons between two drivers in the same race or the same driver across different seasons. We built a Shiny application to allow users to interactively explore qualifying data and create custom visualizations by selecting drivers, seasons, and circuits. As case studies, we look at different qualifying sessions across years with the same driver and across drivers during the same race. For looking at different years, we look at Lando Norris during the São Paulo Grand Prix in 2023 versus in 2024. We look at Charles Leclerc and Oscar Piastri during the 2024 Monaco Grand Prix to compare drivers (and teams). Finally, we look at the 2024 Canadian Grand Prix to observe differentials between Max Verstappen and Sergio Pérez as teammates.
 
 ## Outline
 
-We begin by exploring what Formula 1 is and how a race weekend is scheduled in @sec-f1. We then examine why specifically qualifying sessions are essential for a weekend, why they are ideal for analysis, and what we hope to explore in the data in @sec-quali. In @sec-f1datar, we look at the R package `f1dataR` to examine its general usage and why it was instrumental to this project. We will go into more detail about the data used for the app plots in @sec-data. Then, in @sec-shiny, we look at how the shiny app was developed, and how a user might utilize it explore a qualifying session. We then look at two case studies in @sec-brazil and @sec-monaco for examples of how the functions can be used to visualize data. We also highlight how contrasting elements like weather or track layout make for interesting qualifying sessions. We also look at a case study in @sec-canada to observe the variation between teammates, because they typically have the same machinery. We end with @sec-conclusion to talk about what future work could be done to make the Shiny app more robust, as well as @sec-appendix, which highlights relevant functions and code used to create the Shiny app. 
+We begin by exploring what Formula 1 is and how a race weekend is scheduled in @sec-f1. We then examine why specifically qualifying sessions are essential for a weekend, why they are ideal for analysis, and what we hope to explore in the data in @sec-quali. In @sec-f1datar, we look at the R package `f1dataR` to examine its general usage and why it was instrumental to this project. We will go into more detail about the data used for the app plots in @sec-data. Then, in @sec-shiny, we look at how the shiny app was developed, and how a user might utilize it to explore a qualifying session. We then look at two case studies in @sec-brazil and @sec-monaco for examples of how the functions can be used to visualize data. We also highlight how contrasting elements like weather or track layout make for engaging qualifying sessions. We also look at a case study in @sec-canada to observe the variation between teammates, because they typically have the same machinery. We end with @sec-conclusion to talk about what future work could be done to make the Shiny app more robust, as well as @sec-appendix, which highlights relevant functions and code used to create the Shiny app. 
 
 ## What is Formula 1? {#sec-f1}
 
 Formula 1 (F1) is an international motorsport series governed by the Fédération Internationale de l'Automobile (FIA). It involves 20 drivers across 10 "constructors" who compete in 18-24 race weekends across a season. A "constructor" is essentially a team that develops a car for the season and has two drivers who drive for them. The group of drivers/teams for a season is called the "grid," which is named for the grid-like shape that drivers line up in before a race starts. 
 
-The combination of drivers and teams means there are two different goals at the end of an F1 season. One is the World Constructor's Championship (WCC), which is given to the team with the most points across both drivers. Points are awarded to the top 10 finishers in a race, with 25 points going to first, and 18, 15, 12, 10, 8, 6, 4, 2, and 1 points awarded for 2nd through 10th place respectively. The other is the World Driver's Championship (WDC), which is given to the individual driver with the most points. Though completely separate, it is very uncommon for the driver who wins the World Championship to be from a different team than that who wins the WCC. Since 2000, there have only been three seasons when the team that won the WCC did not also produce the WDC. 
+The combination of drivers and teams means there are two different goals at the end of an F1 season. One is the World Constructor's Championship (WCC), which is given to the team with the most points across both drivers. Points are awarded to the top 10 finishers in a race, with 25 points going to first, and 18, 15, 12, 10, 8, 6, 4, 2, and 1 points awarded for 2nd through 10th place, respectively. The other is the World Driver's Championship (WDC), which is given to the individual driver with the most points. Though completely separate, it is very uncommon for the driver who wins the World Championship to be from a different team than the one that wins the WCC. Since 2000, there have only been three seasons when the team that won the WCC did not also produce the WDC. 
 
 A "typical" race weekend of the F1 season features practice, qualifying, and race sessions, each serving a different purpose. All race weekends are Friday through Sunday, keeping the same schedule to remain as consistent as possible. Fridays involve two "free practice" sessions where they can change car setups at will to allow the teams to gather data to prepare for the race. The first session, Free Practice 1 (FP1), is 60 minutes long, and will typically be focused on getting used to the track and any changes that may have been made from previous seasons, test setups, and gathering data. The second session, aptly named Free Practice 2 (FP2), is also 60 minutes long but typically involves longer race simulations and tire degradation. Saturdays also have two sessions: one final Free Practice 3 (FP3) and qualifying. FP3 is the final chance for setup changes and adjustments and is typically used for short qualifying-style runs. Qualifying is a knockout-style session that sets the starting order for the race day on Sunday.
 
-Because this project focuses on qualifying, we'll go into more detail about what that session looks like. Qualifying, sometimes shortened to "quali," is split into three sessions, Q1, Q2, and Q3. Drivers are allowed to complete as many laps within the section as possible, with their fastest lap counted towards the session's final standings. Q1 is the most extended session, at 18 minutes, and all 20 drivers compete, but the slowest five are eliminated. Q2 is 15 minutes, where the remaining 15 drivers compete and another five are eliminated. The top 10 who make it to Q3 will use the session to finalize the order. It is important to note that positions are set at the end of the section, not at the end of the qualifying session, meaning that the bottom five eliminated will always make up starting places 20th-16th. This rule means that even if a car in Q2 goes a slower time than that of the 16th, it will still qualify as either 15th or above. It is possible, then, for a driver to have a faster lap than someone who qualified above them, but it's rare. 
+Because this project focuses on qualifying, we'll go into more detail about what that session looks like. Qualifying, sometimes shortened to "quali," is split into three sessions: Q1, Q2, and Q3. Drivers are allowed to complete as many laps within the section as possible, with their fastest lap counted towards the session's final standings. Q1 is the most extended session, at 18 minutes, and all 20 drivers compete, but the slowest five are eliminated. Q2 is 15 minutes, where the remaining 15 drivers compete, and another five are eliminated. The top 10 who make it to Q3 will use the session to finalize the order. It is important to note that positions are set at the end of the section, not at the end of the qualifying session, meaning that the bottom five eliminated will always make up starting places 20th-16th. This rule means that even if a car in Q2 goes a slower time than that of the 16th, it will still qualify as either 15th or above. It is possible, then, for a driver to have a faster lap than someone who qualified above them, but it's rare. 
 
 The other important part of Formula 1 to mention is the tire compounds. F1's sole tire sponsor is Pirelli, who supplies all the tires for the grid. The tires come in different compounds (soft, medium, hard) and are used for various track conditions and race strategies. The "slick" dry tires are color-coded: red for soft, yellow for medium, and white for hard. There are two "wet" tires for use when it's raining; intermediate tires are green for damp conditions, and full wet tires are blue. For a race weekend, teams are provided with a certain number of sets for each driver and must use at least two compounds during a race. Qualifying laps are almost always run on the soft tire, with the fastest laps typically coming in when drivers use a new soft, as it has the most grip but wears out quickly. Occasionally, you will see drivers on a used set of tires in qualifying to save a set for the race or on a set of mediums if strategy might lead to using more softs later. 2018 is the only year this project utilized the "hypersoft," "ultrasoft," and "supersoft" tires, which are now just all "soft."
 
@@ -110,7 +109,7 @@ This information is accurate through the end of the 2025 season (prior to F1 add
 
 ## Why Qualifying Laps? {#sec-quali}
 
-A driver's fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions, providing a baseline to compare with. Unlike race laps, which are influenced by tire wear, fuel load, traffic, and strategy, qualifying laps are run under optimal conditions every time because every thousandth of a second counts towards a better grid spot. 
+A driver's fastest lap from a qualifying session highlights driver skill, car setup efficiency, and team strategy under peak performance conditions, providing a baseline with which to compare. Unlike race laps, which are influenced by tire wear, fuel load, traffic, and strategy, qualifying laps are run under optimal conditions every time because every thousandth of a second counts towards a better grid spot. 
 
 We say "optimal conditions" to highlight the idea that any variations in speed are due to driver skill or superior car development rather than unlucky strategy or tire wear. During qualifying, every driver completes laps on low fuel and fresh (or almost fresh) tires, making them the fastest possible. Reducing the variability also allows for more direct comparisons when changing one variable, like the driver or season, while keeping everything else constant because they always attempt a single flying lap under similar conditions. Additionally, because the focus is single flying laps, there are typically no interfering factors that vary lap time, like safety cars, overtaking, or pit stops. An essential rule during qualifying is that cars on a "slow lap" or "outlap" must move off the optimal racing line and out of the way of cars on flying laps to reduce interference. The only interference that might occur during a lap is driver error, mechanical failure, or a safety hazard caused by the environment that would require reduced speed or aborting the lap. 
 
@@ -208,7 +207,7 @@ kable(plot_data, caption='Telemetry Data for Norris and Hülkenberg, 2024 Abu Dh
 
 Variable Information:
 
- - **date**: The data and time that the session (and lap) occurred. 
+ - **date**: The date and time that the session (and lap) occurred. 
  
  - **time**: The running time from the start of the lap in seconds. 
  
@@ -234,7 +233,7 @@ The second page allows users to explore a variety of combinations of results thr
 include_graphics("images/exploration_full.png")
 ```
 
-The selection process for selecting a single driver across two years is similar, but you would first select the driver, then two seasons that they competed in, and then a race that existed in both seasons and had the driver compete in both. The app will then show the same three tables as before but with combined data from both seasons.
+The selection process for selecting a single driver across two years is similar, but you would first select the driver, then two seasons that they competed in, and then a race that existed in both seasons and had the driver compete in both. The app will then show the same three tables as before, but with combined data from both seasons.
 
 The third page allows users to carry over their selections from the exploration or pick new inputs to animate a qualifying lap comparison. The animation runs on a constant loop, meaning it takes as long as the slowest lap time is compared, then starts over. The only additional input users can select is the 'Smoothing Factor.' The smoothing factor affects the caption of the animation, which shows the current time, as well as the speed of each respective car at that fraction of a second. Because F1, especially qualifying, is measured in thousandths of seconds, the telemetry data can have between 10 and 20 rows of data (speed, position, etc.) for a single second, making it difficult to read if the speed was left in its raw state. The smoothing factor takes the average speed over that number of frames and uses that as the caption instead. We see a trade-off, with higher factors making the plot more readable but less accurate than a smaller factor. The small diamond point represents the start/finish line of the circuit. In the static plots of the case studies, there is an arrow indicating the direction the drivers are moving in. 
 
@@ -246,7 +245,7 @@ include_graphics("images/anim_full.png")
 
 # Case Studies
 
-The following section covers three different case studies, each examining a qualifying session that was an interesting to watch, or showcased a large difference. The first, @sec-brazil, showcases how weather affects lap times, by looking at lap times during the São Paulo Grand Prix in 2023 (dry) and 2024 (wet) for Lando Norris. The second and third case studies both look at scenarios where we compare drivers during the same session. @sec-monaco looks at lap times from the drivers who qualified first and second, to observe how important the tenths of a second are around a track like Monaco. @sec-canada takes lap times from two drivers from the same team, to highlight how even with the same machinery, driver ability plays a large part in pace and overall performance. 
+The following section covers three different case studies, each examining a qualifying session that was interesting to watch, or showcased a large difference. The first, @sec-brazil, showcases how weather affects lap times by looking at lap times during the São Paulo Grand Prix in 2023 (dry) and 2024 (wet) for Lando Norris. The second and third case studies both look at scenarios where we compare drivers during the same session. @sec-monaco looks at lap times from the drivers who qualified first and second, to observe how important the tenths of a second are around a track like Monaco. @sec-canada takes lap times from two drivers from the same team to highlight how even with the same machinery, driver ability plays a large part in pace and overall performance. 
 
 ## 2023 vs 2024 São Paulo Grand Prix  {#sec-brazil}
 
@@ -254,7 +253,7 @@ The first case study will compare laps from the 2023 and 2024 São Paulo Grand P
 
 It is important to note that there is some variance in lap times from year to year due to car and driver development, but keeping the driver (and constructor) the same seeks to mitigate some of the variance. We will see more examples later in this section about how qualifying lap times vary between teammates and constructors. 
 
-```{r degbrazil, out.width='70%', fig.align='center', fig.cap='Plot of the seven fastest lap times and tire degredation across the two seasons.', fig.height=4}
+```{r degbrazil, out.width='70%', fig.align='center', fig.cap='Plot of the seven fastest lap times and tire degradation across the two seasons.', fig.height=4}
 #| echo: false
 #| warning: false
 #| message: false
@@ -408,7 +407,7 @@ Monaco is likely the most famous Formula 1 race that still exists on the calenda
 
 This case study compares Oscar Piastri and Charles Leclerc's fastest qualifying laps from 2024. The two drivers, from different constructors, both nearing the front of the constructor's championship, can show how important it is to find every last thousandth of pace in a lap. 
 
-With a first-lap crash and a safety car allowing drivers to change tires immediately without fear of losing strategy to another team, the 2024 Monaco Grand Prix essentially consisted of every driver going around in circles for the duration of the race. The finishing order was almost identical to the starting order (bar a few DNFs). While not so interesting to watch live, it highlights how important qualifying is to a driver's success, especially on particular tracks.
+With a first-lap crash and a safety car allowing drivers to change tires immediately without fear of losing strategy to another team, the 2024 Monaco Grand Prix essentially consisted of every driver going around in circles for the duration of the race. The finishing order was almost identical to the starting order (barring a few DNFs). While not so interesting to watch live, it highlights how important qualifying is to a driver's success, especially on particular tracks.
 
 ```{r degmonaco, out.width='70%', fig.align='center', fig.cap='Plot of the seven fastest lap times and tire degredation across the two drivers', fig.height=4}
 #| echo: false
@@ -539,11 +538,11 @@ corrected_plot <- corrected_track(static_plot, pia) + geom_segment(
 corrected_plot
 ```
 
-We can see from the table and the plot that Leclerc and Piastri were incredibly close even nearing the end of the lap, with only two tenths of a second separating them as the crossed the line. While not the smallest margin for pole in F1 history (that goes to identical times down to the thousandth), it is still an incredibly small margin. But, like most time based sports, being close just isn't good enough, and because of those fractions of a second, it was almost impossible for Piastri to win the race on Sunday. 
+We can see from the table and the plot that Leclerc and Piastri were incredibly close, even nearing the end of the lap, with only two tenths of a second separating them as they crossed the line. While not the smallest margin for pole in F1 history (that goes to identical times down to the thousandth), it is still an incredibly small margin. But, like most time-based sports, being close just isn't good enough, and because of those fractions of a second, it was almost impossible for Piastri to win the race on Sunday. 
 
 ## 2024 Canadian Grand Prix {#sec-canada}
 
-Finally we will observe two drivers from the reigning Constructors' Champions for the following case study. To provide some context, Max Verstappen, Sergio Pérez, and Red Bull Racing were coming off one of the most dominant seasons in F1 history, with Verstappen winning the WDC by 290 points (575 points to teammate Pérez's 285 in second) and Red Bull winning the WCC by over 400. If you took away all of Pérez's points from Red Bull, they still would have won by 166 points. After that, everyone entered the 2024 season expecting the same thing. Unfortunately for Red Bull, and fortunately for anyone who likes to watch more than one team win, Red Bull did not dominate the 2024 season, partially because of the gap in teammate performance. Max Verstappen and Sergio Pérez are qualifying on opposite ends of the grid in the same car. 
+Finally, we will observe two drivers from the reigning Constructors' Champions for the following case study. To provide some context, Max Verstappen, Sergio Pérez, and Red Bull Racing were coming off one of the most dominant seasons in F1 history, with Verstappen winning the WDC by 290 points (575 points to teammate Pérez's 285 in second) and Red Bull winning the WCC by over 400. If you took away all of Pérez's points from Red Bull, they still would have won by 166 points. After that, everyone entered the 2024 season expecting the same thing. Unfortunately for Red Bull, and fortunately for anyone who likes to watch more than one team win, Red Bull did not dominate the 2024 season, partially because of the gap in teammate performance. Max Verstappen and Sergio Pérez are qualifying on opposite ends of the grid in the same car. 
 
 The 2024 Canadian Grand Prix is one such example. In equal machinery, Verstappen consistently extracts more pace from the car than his teammate. While Max was fighting for pole position in Q3, Pérez was eliminated in Q1. This case study highlights how even with the same car, the pace differential can be huge depending on the driver's ability. 
 
