@@ -58,7 +58,7 @@ times vary between teammates and constructors.
 Qualifying results for Lando Norris.
 
 <img src="README_files/figure-commonmark/brazil-1.png"
-style="width:60.0%"
+style="width:100.0%"
 alt="Snapshot of a late point in the lap where cars are very far apart (about 69 seconds in)." />
 
 In this plot, we see that the positioning of Norris between the two

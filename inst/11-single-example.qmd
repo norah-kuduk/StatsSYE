@@ -274,7 +274,7 @@ anim <- corrected_plot +
     )
   )
 
-animation <- animate(anim, width = 700, height = 700, fps = 10)
+animate(anim, width = 700, height = 700, fps = 10, renderer = gifski_renderer())
 anim_save("anim.gif", animation = animation)
 ```
 

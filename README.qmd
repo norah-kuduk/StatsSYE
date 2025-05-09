@@ -108,7 +108,7 @@ final <- inner_join(test, data, by = "season") |>
 kable(final,caption = 'Qualifying results for Lando Norris.', align = 'c')
 ```
 
-```{r brazil, out.width='60%', echo=FALSE, warnings=FALSE, fig.cap='Snapshot of a late point in the lap where cars are very far apart (about 69 seconds in).', fig.height=5}
+```{r brazil, out.width='100%', echo=FALSE, warnings=FALSE, fig.cap='Snapshot of a late point in the lap where cars are very far apart (about 69 seconds in).', fig.height=5}
 brazil24 <- get_quali_telemetry(laps = "fastest", season = 2024, round = 21, driver = "NOR", verbose = FALSE)
 brazil23 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 20, driver = "NOR", verbose = FALSE)
 
