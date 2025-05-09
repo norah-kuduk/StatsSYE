@@ -161,19 +161,28 @@ doohan_abudhabi_2024 <- doohan_abudhabi_2024 |> mutate(driver = "Doohan")
 ```{r}
 plot_data <- bind_rows(norris_abudhabi_2024, doohan_abudhabi_2024) |> 
   mutate(driver = as.factor(driver))
+```
 
-single_point<-plot_data |> group_by(driver) |> slice(25)
+```{r}
+plot_data <- plot_data |> group_by(driver) |>
+    # create groups of 4
+    mutate(group = ceiling(row_number() / 16)) |>
+    # calculate the mean speed for each group and assign to speed_smooth
+    group_by(group) |>
+    mutate(speed_smooth = round(mean(speed, na.rm = TRUE))) |>
+    ungroup() |>
+    # remove the temporary grouping variable
+    select(-group)
 ```
 
 ```{r}
 # Static plot
 static_plot <- ggplot() +
   geom_path(data = abu_dhabi_track, aes(x = x2, y = y2, group = 1), 
-            linewidth = 8, color = "white") +
+            linewidth = 8, color = "white", lineend = "round") +
   geom_point(data = start_coord, aes(x = x2, y = y2), 
              color = "black", shape = 18, size = 4) +
-  geom_point(data = single_point, aes(x = x, y = y, group = driver, color = driver), 
-             size = 3) +
+  geom_point(data = plot_data, aes(x = x, y = y, color = driver), size = 2.5) +
   scale_color_manual(values = c("Norris" = norris_color, "Doohan" = doohan_color)) +
   theme_track() +
   labs(title = "Norris vs. Doohan Qualifying Lap", 
@@ -187,7 +196,46 @@ corrected_plot <- corrected_track(static_plot, norris_abudhabi_2024)
 ```
 
 ```{r}
-plot_data |> group_by(driver) |>
+# Animate the lap with speed overlay
+animated_plot <- corrected_plot +
+  transition_reveal(along = time) +
+  ease_aes('linear') +
+  labs(
+    caption = paste(
+      "Time: {sprintf('%.3f', frame_along)} s\n",
+      "Norris Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$driver == 'Norris'] - frame_along))]} kph\n",
+      "Doohan Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$driver == 'Doohan'] - frame_along))]} kph"
+    )
+  )
+
+outfile <- tempfile(fileext = ".gif")
+animation <- animate(animated_plot, width = 700, height = 700, fps = 10)
+
+anim_save("anim.gif", animation = animation)
+```
+
+### Sao Paulo
+
+```{r}
+brazil24 <- get_quali_telemetry(laps = "fastest", season = 2024, round = 21, driver = "NOR", verbose = FALSE)
+brazil23 <- get_quali_telemetry(laps = "fastest", season = 2023, round = 20, driver = "NOR", verbose = FALSE)
+
+# smooth Abu Dhabi track data
+brazil_track <- smooth_track(brazil24)
+start_coord <- brazil_track |> slice(1)
+
+# get team and driver colors
+color_24 <- driver_color("NOR")
+color_23 <- "darkorange4"
+
+# Add driver labels and combine data
+brazil24 <- brazil24 |> mutate(season = 2024)
+brazil23 <- brazil23 |> mutate(season = 2023)
+
+plot_data <- bind_rows(brazil24, brazil23) |> mutate(season = as.factor(season))
+
+
+plot_data <- plot_data |> group_by(season) |>
     # create groups of 4
     mutate(group = ceiling(row_number() / 16)) |>
     # calculate the mean speed for each group and assign to speed_smooth
@@ -196,29 +244,40 @@ plot_data |> group_by(driver) |>
     ungroup() |>
     # remove the temporary grouping variable
     select(-group)
-```
-
-```{r}
-smooth_speed(plot_data, driver, 4)
-```
 
 
-```{r}
-# Animate the lap with speed overlay
-animated_plot <- corrected_plot +
+ # Static plot
+static_plot <- ggplot() +
+  geom_path(data = brazil_track, aes(x = x2, y = y2, group = 1),
+            linewidth = 6, color = "white", lineend = "round") +
+  geom_point(data = start_coord, aes(x = x2, y = y2),
+             color = "black", shape = 18, size = 4) +
+  geom_point(data = plot_data, aes(x = x, y = y, group = season, color = season),
+             size = 4) +
+  scale_color_manual(values = c("2024" = color_24, "2023" = color_23)) +
+  theme_track() +
+  labs(title = "2024 vs. 2023 Norris Qualifying Lap",
+     subtitle = "São Paulo Grand Prix",
+     x = NULL, y = NULL)
+
+# Correct the track alignment
+corrected_plot <- corrected_track(static_plot, brazil24)
+
+anim <- corrected_plot +
   transition_reveal(along = time) +
   ease_aes('linear') +
   labs(
-    caption = paste(
+      caption = paste(
       "Time: {sprintf('%.3f', frame_along)} s\n",
-      "Norris Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == 'Norris'] - frame_along))]} kph\n",
-      "Doohan Speed: {plot_data$speed[which.min(abs(plot_data$time[plot_data$driver == 'Doohan'] - frame_along))]} kph"
+      "2023 Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$season == '2023'] - frame_along))]} kph\n",
+      "2024 Speed: {plot_data$speed_smooth[which.min(abs(plot_data$time[plot_data$season == '2024'] - frame_along))]} kph"
     )
   )
 
-# Render animation
-animate(animated_plot, width = 700, height = 700, fps = 10)
+animation <- animate(anim, width = 700, height = 700, fps = 10)
+anim_save("anim.gif", animation = animation)
 ```
+
 
 
 

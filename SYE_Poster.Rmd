@@ -63,7 +63,6 @@ library(ggrepel)
 1. Compare driver performance across races/seasons, thinking about historically important or interesting sessions. 
 
 2. Provide an interactive, visual platform to compare qualifying laps for users.
-   
 
 # Methods & Tools
 
@@ -84,7 +83,7 @@ library(ggrepel)
 | Season   | The year of the session.        |
 |    |                     |
 | Lap Time    | The time (in seconds) of the lap.        |
-| Compound    | The name of the tire compund the driver is using. Different compounds have different grip levels.  |
+| Compound    | The name of the tire compound the driver is using. Different compounds have different grip levels.  |
 
 ## Season Comparison
 
